@@ -1,8 +1,16 @@
-use crate::{Error, core::Build, comp::{Text, Plain, Any, Style, Confirmation, DispatchActionConfig, OptionGroup, OptionObject, Filter}, block::{Input, Section, Actions}};
+use crate::{
+    block::{Actions, Input, Section},
+    comp::{
+        Any, Confirmation, DispatchActionConfig, Filter, OptionGroup, OptionObject, Plain, Style,
+        Text,
+    },
+    core::Build,
+    Error,
+};
 
 use serde::{Deserialize, Serialize};
-use serde_with::skip_serializing_none;
 use serde_json as json;
+use serde_with::skip_serializing_none;
 
 mod button;
 mod checkboxes;
@@ -34,16 +42,7 @@ pub use self::select::Select;
 pub use self::timepicker::TimePicker;
 pub use self::url::UrlInput;
 
-pub trait Element: Build  {    
-    fn parse_action_id(&self, id: &str) -> Result<(), Error> {
-        if id.is_empty() {
-            return Err(Error::Element(self.get_type(), "No action_id defined!".to_string()))
-        } else if id.len() > 255 {
-            return Err(Error::Element(self.get_type(), "Action_id must be under 255 characters!".to_string()))
-        }
-        Ok(())
-    }
-}
+pub trait Element: Build {}
 
 pub trait AsElements {
     /// Turns `self` into a list of `Elements`
@@ -58,7 +57,7 @@ pub trait SectionElement: Element
 where
     Self: Sized,
 {
-    fn into_section_accessory(self) -> Result<Section, Error> {
+    fn into_section_as_accessory(self) -> Result<Section, Error> {
         Section::new().accessory(self)
     }
 }
@@ -127,4 +126,3 @@ impl Menu for ConversationList {}
 #[derive(Debug, Default)]
 pub struct PublicChannels {}
 impl Menu for PublicChannels {}
-

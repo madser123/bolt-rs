@@ -1,7 +1,4 @@
-use crate::{
-    pre::*, 
-    parsing::parse_response,
-};
+use crate::{parsing::parse_response, pre::*};
 
 #[skip_serializing_none]
 #[derive(Deserialize, Serialize, Debug, Default)]
@@ -76,7 +73,12 @@ impl ConversationStarter {
         let users = if self.users.is_empty() {
             None
         } else if self.users.len() > 1 {
-            Some(self.users.iter().map(|x| x.to_string() + ",").collect::<String>())
+            Some(
+                self.users
+                    .iter()
+                    .map(|x| x.to_string() + ",")
+                    .collect::<String>(),
+            )
         } else {
             Some(self.users.get(0).unwrap().to_string())
         };
@@ -88,7 +90,10 @@ impl ConversationStarter {
             users,
         }) {
             Ok(conversation) => Ok(conversation),
-            Err(error) => Err(Error::Parsing("Conversation".to_string(), error.to_string()))
+            Err(error) => Err(Error::Parsing(
+                "Conversation".to_string(),
+                error.to_string(),
+            )),
         }
     }
 
@@ -103,13 +108,13 @@ impl ConversationStarter {
             .await
         {
             Ok(resp) => resp,
-            Err(error) => return Err(Error::Request(error))
+            Err(error) => return Err(Error::Request(error)),
         };
 
         let conversation = parse_response::<ConversationResponse>(resp).await?;
 
         if let Some(error) = conversation.error {
-            return Err(Error::Conversation(error))
+            return Err(Error::Conversation(error));
         }
 
         Ok(conversation)

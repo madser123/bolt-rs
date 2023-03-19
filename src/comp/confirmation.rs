@@ -1,5 +1,5 @@
 use super::*;
-use text::{Text, Plain, Any};
+use text::{Any, Plain, Text};
 
 #[skip_serializing_none]
 #[derive(Deserialize, Serialize, Debug, Clone, Default)]
@@ -12,7 +12,12 @@ pub struct Confirmation {
 }
 impl Composition for Confirmation {}
 impl Confirmation {
-    pub fn new(title: Text<Plain>, text: Text<Any>, confirm: Text<Plain>, deny: Text<Plain>) -> Self {
+    pub fn new(
+        title: Text<Plain>,
+        text: Text<Any>,
+        confirm: Text<Plain>,
+        deny: Text<Plain>,
+    ) -> Self {
         Self {
             title,
             text,

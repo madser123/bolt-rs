@@ -3,28 +3,21 @@ use std::{collections::HashMap, fmt::Debug};
 use serde::de::DeserializeOwned;
 
 use crate::{
-    pre::*,
-    comp::{Text, Plain},
     block::Blocks,
-    core::{
-        Build,
-        state::State,
-    }, 
-    parsing::{
-        parse_response,
-        serde_default_skip,
-        SerdeDefaultSkip,
-    },
+    comp::{Plain, Text},
+    core::{state::State, Build},
+    parsing::{default_phantomdata, parse_response, SerializeDefaultPhantomData},
+    pre::*,
 };
 
 #[derive(Deserialize, Serialize, Debug, Clone, Default)]
-pub struct ViewController<T: Serialize + SerdeDefaultSkip> {
+pub struct ViewController<T: Serialize + SerializeDefaultPhantomData> {
     view: View<T>,
     trigger_id: Option<String>,
     external_id: Option<String>,
 }
 
-impl<T: Serialize + SerdeDefaultSkip> ViewController<T> {
+impl<T: Serialize + SerializeDefaultPhantomData> ViewController<T> {
     pub fn trigger(trigger: &str, view: View<T>) -> Self {
         ViewController {
             view,
@@ -42,12 +35,12 @@ impl<T: Serialize + SerdeDefaultSkip> ViewController<T> {
     }
 }
 
-pub trait AsView<T: SerdeDefaultSkip> {
+pub trait AsView<T: SerializeDefaultPhantomData> {
     fn as_view(&self) -> Result<View<T>, Error>;
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone, Default)]
-pub struct ViewResponse<T: SerdeDefaultSkip> {
+pub struct ViewResponse<T: SerializeDefaultPhantomData> {
     ok: bool,
     view: Option<View<T>>,
     error: Option<String>,
@@ -56,21 +49,20 @@ pub struct ViewResponse<T: SerdeDefaultSkip> {
 
 #[derive(Deserialize, Serialize, Default, Debug, Clone)]
 pub struct HomeTab {}
-impl SerdeDefaultSkip for HomeTab {}
+impl SerializeDefaultPhantomData for HomeTab {}
 
 #[derive(Deserialize, Serialize, Default, Debug, Clone)]
 pub struct Modal {}
-impl SerdeDefaultSkip for Modal {}
-
+impl SerializeDefaultPhantomData for Modal {}
 
 #[derive(Deserialize, Serialize, Default, Debug, Clone)]
 pub struct ModalResponse {}
-impl SerdeDefaultSkip for ModalResponse {}
+impl SerializeDefaultPhantomData for ModalResponse {}
 
 #[skip_serializing_none]
 #[derive(Deserialize, Serialize, Debug, Clone, Default)]
-pub struct View<T: SerdeDefaultSkip = ModalResponse> {
-    #[serde(default, deserialize_with = "serde_default_skip", skip_serializing)]
+pub struct View<T: SerializeDefaultPhantomData = ModalResponse> {
+    #[serde(default, deserialize_with = "default_phantomdata", skip_serializing)]
     t: std::marker::PhantomData<T>,
 
     r#type: String,
@@ -101,7 +93,6 @@ impl View {
 
     pub fn modal(title: Text<Plain>, blocks: Blocks) -> View<Modal> {
         View::<Modal> {
-
             r#type: "modal".to_string(),
             title: Some(title),
             blocks: Some(blocks),
@@ -109,7 +100,7 @@ impl View {
         }
     }
 }
-impl<T: DeserializeOwned + Serialize + SerdeDefaultSkip + Debug> View<T> {
+impl<T: DeserializeOwned + Serialize + SerializeDefaultPhantomData + Debug> View<T> {
     pub fn private_metadata(mut self, data: &str) -> Self {
         self.private_metadata = Some(data.to_string());
         self
@@ -128,11 +119,12 @@ impl<T: DeserializeOwned + Serialize + SerdeDefaultSkip + Debug> View<T> {
     pub async fn open(self, trigger_id: &str, token: &str) -> Result<(), Error> {
         let client = reqwest::Client::new();
         let json = ViewController::trigger(trigger_id, self);
-        let resp: ViewResponse<T> = match client.post("https://slack.com/api/views.open")
+        let resp: ViewResponse<T> = match client
+            .post("https://slack.com/api/views.open")
             .bearer_auth(token)
             .json(&json)
             .send()
-            .await 
+            .await
         {
             Ok(resp) => parse_response(resp).await?,
             Err(error) => return Err(Error::Request(error)),
@@ -141,16 +133,17 @@ impl<T: DeserializeOwned + Serialize + SerdeDefaultSkip + Debug> View<T> {
         dbg!(&resp);
 
         if let Some(error) = resp.error {
-            return Err(Error::View(error, resp.response_metadata))
+            return Err(Error::View(error, resp.response_metadata));
         }
 
         Ok(())
-    }  
+    }
 
     pub async fn update(self, token: &str) -> Result<(), Error> {
         let client = reqwest::Client::new();
         let json = ViewController::update(self);
-        let resp: ViewResponse<T> = match client.post("https://slack.com/api/views.update")
+        let resp: ViewResponse<T> = match client
+            .post("https://slack.com/api/views.update")
             .bearer_auth(token)
             .json(&json)
             .send()
@@ -161,7 +154,7 @@ impl<T: DeserializeOwned + Serialize + SerdeDefaultSkip + Debug> View<T> {
         };
 
         if let Some(error) = resp.error {
-            return Err(Error::View(error, resp.response_metadata))
+            return Err(Error::View(error, resp.response_metadata));
         }
 
         Ok(())
@@ -194,7 +187,7 @@ impl View<Modal> {
     //    self
     //}
 }
-impl<T: SerdeDefaultSkip> Build for View<T> {
+impl<T: SerializeDefaultPhantomData> Build for View<T> {
     fn get_type(&self) -> String {
         self.r#type.clone()
     }
@@ -211,20 +204,28 @@ impl View<ModalResponse> {
 
     pub fn get_state_value(&self, block_id: &str, action_id: &str) -> Result<String, Error> {
         if self.state.is_none() {
-            return Err(Error::View(format!("Couldn't get state-value block: '{block_id}' action: '{action_id}'. No state found."), None))
+            return Err(Error::View(format!("Couldn't get state-value block: '{block_id}' action: '{action_id}'. No state found."), None));
         }
 
         let block = match self.state.as_ref().unwrap().values.get(block_id) {
             Some(b) => b,
-            None => return Err(Error::View(format!("Couldn't get state value of block: '{block_id}'"), None))
+            None => {
+                return Err(Error::View(
+                    format!("Couldn't get state value of block: '{block_id}'"),
+                    None,
+                ))
+            }
         };
 
         if let Some(value) = block.get(action_id) {
             if let Some(v) = &value.value {
-                return Ok(v.to_owned())
+                return Ok(v.to_owned());
             }
         }
 
-        Err(Error::View(format!("Couldn't get state value of block: '{block_id}' action: '{action_id}'"), None))
+        Err(Error::View(
+            format!("Couldn't get state value of block: '{block_id}' action: '{action_id}'"),
+            None,
+        ))
     }
 }

@@ -26,10 +26,13 @@ pub struct MultiSelect<T: Menu = StaticOptions> {
     default_to_current_conversation: Option<bool>,
     filter: Option<Filter>,
 
-    initial_channels: Option<Vec<String>>
+    initial_channels: Option<Vec<String>>,
 }
 impl MultiSelect {
-    pub fn static_options(action_id: &str, options: Vec<OptionObject<Plain>>) -> MultiSelect<StaticOptions> {
+    pub fn static_options(
+        action_id: &str,
+        options: Vec<OptionObject<Plain>>,
+    ) -> MultiSelect<StaticOptions> {
         MultiSelect::<StaticOptions> {
             r#type: "multi_static_select".to_string(),
             action_id: action_id.to_string(),
@@ -70,9 +73,9 @@ impl MultiSelect {
         }
     }
 }
-impl<T: Menu> MultiSelect<T> 
-where 
-    Self: Element
+impl<T: Menu> MultiSelect<T>
+where
+    Self: Element,
 {
     pub fn confirm(mut self, confirm: Confirmation) -> Self {
         self.confirm = Some(confirm);

@@ -4,7 +4,7 @@ use super::*;
 #[derive(Deserialize, Serialize, Debug, Clone, Default)]
 pub struct Select<M: Menu = StaticOptions> {
     #[serde(skip_serializing)]
-    t: std::marker::PhantomData<M> ,
+    t: std::marker::PhantomData<M>,
 
     r#type: String,
     action_id: String,
@@ -26,10 +26,13 @@ pub struct Select<M: Menu = StaticOptions> {
     response_url_enabled: Option<bool>,
     filter: Option<Filter>,
 
-    initial_channel: Option<String>
+    initial_channel: Option<String>,
 }
 impl Select {
-    pub fn static_options(action_id: &str, options: Vec<OptionObject<Plain>>) -> Select<StaticOptions> {
+    pub fn static_options(
+        action_id: &str,
+        options: Vec<OptionObject<Plain>>,
+    ) -> Select<StaticOptions> {
         Select::<StaticOptions> {
             r#type: "static_select".to_string(),
             action_id: action_id.to_string(),
@@ -72,7 +75,7 @@ impl Select {
 }
 impl<M: Menu> Select<M>
 where
-    Self: Element
+    Self: Element,
 {
     pub fn confirm(mut self, confirm: Confirmation) -> Self {
         self.confirm = Some(confirm);

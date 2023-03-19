@@ -1,8 +1,8 @@
 use super::*;
 use crate::{
-    user::{User, Team},
-    view::{View, ModalResponse},
-    comp::{Text, Any},
+    comp::{Any, Text},
+    user::Team,
+    view::{ModalResponse, View},
 };
 
 // Types
@@ -56,29 +56,28 @@ pub struct BlockAction {
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct MessageAction {
-        /// The type of interaction used. This will always be "message_shortcut" for this type of payload.
-        pub r#type: String,
+    /// The type of interaction used. This will always be "message_shortcut" for this type of payload.
+    pub r#type: String,
 
-        /// The shortcut/interactions name/id.
-        pub callback_id: String,
-    
-        /// An id created for the interaction itself. This can be used to open modals.
-        pub trigger_id: String,
+    /// The shortcut/interactions name/id.
+    pub callback_id: String,
 
-        pub response_url: String,
+    /// An id created for the interaction itself. This can be used to open modals.
+    pub trigger_id: String,
 
-        /// The user who interacted.
-        pub user: ResponseUser,
+    pub response_url: String,
 
-        pub message: Message,
+    /// The user who interacted.
+    pub user: ResponseUser,
 
-        pub channel: Channel,
+    pub message: Message,
 
-        /// The team (Workspace) the interaction originates from.
-        pub team: Team,
+    pub channel: Channel,
 
-        // /// Each request sends the bots `verification token` for verification | Deprecated - Use signed secrets instead.
-        // pub token: String,
+    /// The team (Workspace) the interaction originates from.
+    pub team: Team,
+    // /// Each request sends the bots `verification token` for verification | Deprecated - Use signed secrets instead.
+    // pub token: String,
 }
 
 /// A payload sent from slack for app-shortcuts.
@@ -95,7 +94,6 @@ pub struct Shortcut {
 
     // /// Each request sends the bots `verification token` for verification | Deprecated - Use signed secrets instead.
     // pub token: String,
-
     /// A timestamp for when the action was executed.
     pub action_ts: String,
 
@@ -119,7 +117,7 @@ pub struct ViewSubmission {
     pub r#type: String,
 
     pub team: Team,
-    
+
     pub user: ResponseUser,
 
     pub view: View<ModalResponse>,

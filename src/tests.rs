@@ -1,12 +1,12 @@
 #[cfg(test)]
 mod test {
-    use crate::{*, core::Build};
-    use std::vec;
+    use crate::{core::Build, *};
     use serde_json::json;
+    use std::vec;
 
-    use block::{Blocks, AsBlock, AsBlocks};
-    use message::MessageAble;
+    use block::{AsBlock, AsBlocks, Blocks};
     use comp::Text;
+    use message::MessageAble;
 
     #[derive(Clone)]
     pub struct TestUser {
@@ -16,7 +16,7 @@ mod test {
     }
     pub struct TestList {
         name: &'static str,
-        users: Vec<TestUser>
+        users: Vec<TestUser>,
     }
 
     impl AsBlocks for TestList {
@@ -35,8 +35,7 @@ mod test {
             Ok(block::Section::new()
                 .field(Text::mrkdwn(&format!("- Id: {}", self.id)).into())
                 .field(Text::mrkdwn(&format!("- Name: {}", self.name)).into())
-                .field(Text::mrkdwn(&format!("- Webpage: {}", self.url)).into())
-            )
+                .field(Text::mrkdwn(&format!("- Webpage: {}", self.url)).into()))
         }
     }
 
@@ -45,11 +44,9 @@ mod test {
             Ok(message::Message::new()
                 .channel("XXXXXX")
                 .text("Test")
-                .blocks(self.as_blocks()?)
-            )
+                .blocks(self.as_blocks()?))
         }
     }
-
 
     fn get_test_types() -> (TestUser, TestUser, TestList) {
         let user1 = TestUser {
@@ -72,9 +69,7 @@ mod test {
     #[test]
     fn element_test() {
         let button = element::Button::new(Text::plain("Yeet"), "action_1");
-        let _block = block::Section::new()
-            .accessory(button)
-            .unwrap();
+        let _block = block::Section::new().accessory(button).unwrap();
     }
 
     #[test]

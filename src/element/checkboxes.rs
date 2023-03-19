@@ -13,7 +13,7 @@ pub struct Checkboxes {
 impl SectionElement for Checkboxes {}
 impl ActionsElement for Checkboxes {}
 impl InputElement for Checkboxes {}
-impl Element for Checkboxes {} 
+impl Element for Checkboxes {}
 impl Default for Checkboxes {
     fn default() -> Self {
         Self {
@@ -49,7 +49,6 @@ impl Checkboxes {
         self.focus_on_load = Some(focus);
         self
     }
-
 }
 impl Build for Checkboxes {
     fn get_type(&self) -> String {

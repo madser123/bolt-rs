@@ -1,42 +1,41 @@
 use super::*;
 use crate::{
-    parsing::{SerdeDefaultSkip, serde_default_skip},
-    element::{Element, ContextElement}
+    element::{ContextElement, Element},
+    parsing::{default_phantomdata, SerializeDefaultPhantomData},
 };
 
 #[derive(Deserialize, Serialize, Debug, Clone, Default)]
 pub struct Plain;
-impl SerdeDefaultSkip for Plain  {}
+impl SerializeDefaultPhantomData for Plain {}
 
 #[derive(Deserialize, Serialize, Debug, Clone, Default)]
 pub struct Markdown;
-impl SerdeDefaultSkip for Markdown  {}
+impl SerializeDefaultPhantomData for Markdown {}
 
 #[derive(Deserialize, Serialize, Debug, Clone, Default)]
 pub struct Any;
-impl SerdeDefaultSkip for Any  {}
-
+impl SerializeDefaultPhantomData for Any {}
 
 #[skip_serializing_none]
 #[derive(Deserialize, Serialize, Debug, Clone)]
-pub struct Text<T: SerdeDefaultSkip = Any> {
-    #[serde(default, deserialize_with = "serde_default_skip", skip_serializing)]
+pub struct Text<T: SerializeDefaultPhantomData = Any> {
+    #[serde(default, deserialize_with = "default_phantomdata", skip_serializing)]
     t: std::marker::PhantomData<T>,
 
     #[serde(default)]
     r#type: String,
     #[serde(default)]
     text: String,
-    
+
     emoji: Option<bool>,
-    verbatim: Option<bool>
+    verbatim: Option<bool>,
 }
 // Element and ContextElement are not really related to Text-objects,
-// but this is needed to associate the type with the context layout-block.
-impl<T: SerdeDefaultSkip> Element for Text<T> {}
-impl<T: SerdeDefaultSkip> ContextElement for Text<T> {}
-impl Composition for Text {}
-impl<T: SerdeDefaultSkip> Default for Text<T> {
+// but this is needed to associate the type with the 'Context' layout-block.
+impl<T: SerializeDefaultPhantomData> Element for Text<T> {}
+impl<T: SerializeDefaultPhantomData> ContextElement for Text<T> {}
+impl<T: SerializeDefaultPhantomData> Composition for Text<T> {}
+impl<T: SerializeDefaultPhantomData> Default for Text<T> {
     fn default() -> Self {
         Text::<T> {
             t: std::marker::PhantomData::<T>,
@@ -50,26 +49,26 @@ impl<T: SerdeDefaultSkip> Default for Text<T> {
 }
 impl Text {
     pub fn mrkdwn(text: &str) -> Text<Markdown> {
-        Text::<Markdown> {            
+        Text::<Markdown> {
             r#type: "mrkdwn".to_string(),
             text: text.to_string(),
             emoji: None,
-            verbatim: None,
+            verbatim: Some(false),
             ..Default::default()
         }
     }
 
     pub fn plain(text: &str) -> Text<Plain> {
-        Text::<Plain> {            
+        Text::<Plain> {
             r#type: "plain_text".to_string(),
             text: text.to_string(),
-            emoji: None,
+            emoji: Some(false),
             verbatim: None,
             ..Default::default()
         }
     }
 }
-impl<T: SerdeDefaultSkip> Text<T> {
+impl<T: SerializeDefaultPhantomData> Text<T> {
     pub fn len(&self) -> usize {
         self.text.len()
     }
@@ -90,7 +89,7 @@ impl Text<Plain> {
         self
     }
 }
-impl<T: SerdeDefaultSkip> Build for Text<T> {
+impl<T: SerializeDefaultPhantomData> Build for Text<T> {
     fn get_type(&self) -> String {
         "text".to_string()
     }
@@ -98,12 +97,24 @@ impl<T: SerdeDefaultSkip> Build for Text<T> {
 
 impl From<Text<Plain>> for Text<Any> {
     fn from(value: Text<Plain>) -> Self {
-        Text::<Any> { t: std::marker::PhantomData::<Any>, r#type: value.r#type, text: value.text, emoji: value.emoji, verbatim: value.verbatim }
+        Text::<Any> {
+            t: std::marker::PhantomData::<Any>,
+            r#type: value.r#type,
+            text: value.text,
+            emoji: value.emoji,
+            verbatim: value.verbatim,
+        }
     }
 }
 
 impl From<Text<Markdown>> for Text<Any> {
     fn from(value: Text<Markdown>) -> Self {
-        Text::<Any> { t: std::marker::PhantomData::<Any>, r#type: value.r#type, text: value.text, emoji: value.emoji, verbatim: value.verbatim }
+        Text::<Any> {
+            t: std::marker::PhantomData::<Any>,
+            r#type: value.r#type,
+            text: value.text,
+            emoji: value.emoji,
+            verbatim: value.verbatim,
+        }
     }
 }

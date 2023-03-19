@@ -1,19 +1,19 @@
+use crate::core::Build;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 use std::fmt::{Display, Formatter};
-use crate::core::Build;
 
 mod confirmation;
 mod dispatchactionconfig;
 mod filter;
-mod text;
 mod option;
+mod text;
 
 pub use confirmation::Confirmation;
 pub use dispatchactionconfig::DispatchActionConfig;
 pub use filter::Filter;
-pub use text::{Text, Markdown, Plain, Any};
-pub use option::{OptionObject, OptionGroup};
+pub use option::{OptionGroup, OptionObject};
+pub use text::{Any, Markdown, Plain, Text};
 
 pub trait Composition: Build {}
 

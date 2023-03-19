@@ -6,7 +6,7 @@ pub struct Overflow {
     r#type: String,
     action_id: String,
     options: Vec<OptionObject<Plain>>,
-    confirm: Option<Confirmation>
+    confirm: Option<Confirmation>,
 }
 impl SectionElement for Overflow {}
 impl ActionsElement for Overflow {}

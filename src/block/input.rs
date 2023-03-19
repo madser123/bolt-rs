@@ -49,7 +49,7 @@ impl<E: InputElement> Input<E> {
         self
     }
 }
-impl<E: InputElement> Build for Input<E> {    
+impl<E: InputElement> Build for Input<E> {
     fn get_type(&self) -> String {
         "input".to_string()
     }

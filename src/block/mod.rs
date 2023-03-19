@@ -1,8 +1,8 @@
 use crate::{
+    comp::{Any, Plain, Text},
+    core::Build,
+    element::{ActionsElement, ContextElement, Element, InputElement, SectionElement},
     pre::*,
-    comp::{Text, Plain, Any}, 
-    core::{Build},
-    element::{Element, SectionElement, ActionsElement, ContextElement, InputElement},
 };
 
 mod actions;
@@ -56,7 +56,7 @@ impl Blocks {
 
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
-    } 
+    }
 
     pub fn push(&mut self, block: impl Block) -> Result<(), Error> {
         self.0.push(block.build()?);

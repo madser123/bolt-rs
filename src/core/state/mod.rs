@@ -3,7 +3,7 @@ use std::collections::HashMap;
 
 #[derive(Deserialize, Serialize, Debug, Clone, Default)]
 pub struct State {
-    pub values: HashMap<String, HashMap<String, StateValue>>
+    pub values: HashMap<String, HashMap<String, StateValue>>,
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone, Default)]

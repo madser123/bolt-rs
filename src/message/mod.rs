@@ -1,9 +1,4 @@
-use crate::{
-    pre::*,
-    parsing::parse_response, 
-    block::Blocks, 
-    element::Elements
-};
+use crate::{block::Blocks, element::Elements, parsing::parse_response, pre::*};
 
 #[skip_serializing_none]
 #[derive(Deserialize, Serialize, Debug)]
@@ -18,7 +13,7 @@ pub struct MessageResponse {
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Response {
     pub channel: Option<String>,
-    pub ts: Option<String>
+    pub ts: Option<String>,
 }
 
 #[skip_serializing_none]
@@ -68,7 +63,7 @@ impl Message {
         let resp = parse_response::<MessageResponse>(resp).await?;
 
         if let Some(error) = resp.error {
-            return Err(Error::Message(error))
+            return Err(Error::Message(error));
         }
 
         Ok(Response {

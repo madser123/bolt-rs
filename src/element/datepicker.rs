@@ -54,7 +54,6 @@ impl DatePicker {
         self.placeholder = Some(text);
         self
     }
-
 }
 impl Build for DatePicker {
     fn get_type(&self) -> String {

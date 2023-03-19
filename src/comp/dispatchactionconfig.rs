@@ -17,7 +17,8 @@ impl DispatchActionConfig {
     }
 
     pub fn on_characters(mut self) -> Self {
-        self.trigger_actions_on.push("on_character_entered".to_string());
+        self.trigger_actions_on
+            .push("on_character_entered".to_string());
         self
     }
 }

@@ -1,11 +1,6 @@
-
-use crate::{
-    pre::*,
-    parsing::parse_response,
-};
+use crate::{parsing::parse_response, pre::*};
 use reqwest::{multipart, Client};
 use std::{fs, marker::PhantomData};
-
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct FileResponse {
@@ -37,7 +32,7 @@ impl File {
         &self.permalink
     }
 
-    pub fn permalink_public(&self) -> &str { 
+    pub fn permalink_public(&self) -> &str {
         &self.permalink_public
     }
 
@@ -52,7 +47,8 @@ impl File {
     pub fn get_public_url(&self) -> String {
         let filename = self.name().to_lowercase();
         let url = url::Url::parse(self.permalink_public()).unwrap();
-        let segments: Vec<&str> = url.path_segments()
+        let segments: Vec<&str> = url
+            .path_segments()
             .unwrap()
             .next()
             .unwrap()
@@ -60,10 +56,11 @@ impl File {
             .collect();
 
         let (team_id, file_id, pub_secret) = (
-            #[allow(clippy::get_first)] // Suppress clippy warning for using "get(0)" to get the first element
-            segments.get(0).unwrap(), 
-            segments.get(1).unwrap(), 
-            segments.get(2).unwrap()
+            #[allow(clippy::get_first)]
+            // Suppress clippy warning for using "get(0)" to get the first element
+            segments.get(0).unwrap(),
+            segments.get(1).unwrap(),
+            segments.get(2).unwrap(),
         );
 
         format!("https://files.slack.com/files-pri/{team_id}-{file_id}/{filename}?pub_secret={pub_secret}")
@@ -75,21 +72,24 @@ impl File {
             .text("token", token.to_owned())
             .text("file", self.id);
 
-        let response = client.post("https://slack.com/api/files.sharedPublicURL")
+        let response = client
+            .post("https://slack.com/api/files.sharedPublicURL")
             .multipart(req)
             .send()
             .await?;
-        
+
         let resp = parse_response::<FileResponse>(response).await?;
 
         dbg!(&resp);
-        
+
         if let Some(error) = resp.error {
-            return Err(Error::File(error))
+            return Err(Error::File(error));
         }
 
         if resp.file.is_none() {
-            return Err(Error::File(format!("No file returned from slack. Response: {resp:?}")))
+            return Err(Error::File(format!(
+                "No file returned from slack. Response: {resp:?}"
+            )));
         }
 
         Ok(resp.file.unwrap())
@@ -114,10 +114,12 @@ pub struct Upload<C = Nothing> {
 }
 
 impl Upload {
-    pub fn from_path<P: std::convert::AsRef<std::path::Path>>(path: P) -> Result<Upload<File>, Error> {
+    pub fn from_path<P: std::convert::AsRef<std::path::Path>>(
+        path: P,
+    ) -> Result<Upload<File>, Error> {
         let file = match fs::read(&path) {
             Ok(file) => file,
-            Err(error) => return Err(Error::File(error.to_string()))
+            Err(error) => return Err(Error::File(error.to_string())),
         };
         let filename = match path.as_ref().file_name() {
             Some(n) => n.to_string_lossy().to_string(),
@@ -176,7 +178,7 @@ impl<C> Upload<C> {
 }
 
 impl Upload<Nothing> {
-    pub fn file(self, file: Vec<u8> ) -> Upload<File> {
+    pub fn file(self, file: Vec<u8>) -> Upload<File> {
         Upload::<File> {
             c: PhantomData::<File>,
             file: Some(file),
@@ -188,7 +190,9 @@ impl Upload<Nothing> {
 impl Upload<File> {
     pub async fn upload(self, token: &str) -> Result<File, Error> {
         if self.file.is_none() && self.content.is_none() {
-            return Err(Error::File("No file-contents (content() or file() is required.)".to_string()));
+            return Err(Error::File(
+                "No file-contents (content() or file() is required.)".to_string(),
+            ));
         }
         let client = Client::new();
         let mut req = multipart::Form::new().text("token", token.to_owned());
@@ -204,7 +208,7 @@ impl Upload<File> {
         }
         if let Some(filename) = self.filename {
             req = req.text("filename", filename);
-        }        
+        }
         if let Some(filetype) = self.filetype {
             req = req.text("filetype", filetype);
         }
@@ -217,25 +221,29 @@ impl Upload<File> {
         if let Some(title) = self.title {
             req = req.text("title", title);
         }
-        
-        let resp = match client.post("https://slack.com/api/files.upload")
+
+        let resp = match client
+            .post("https://slack.com/api/files.upload")
             .multipart(req)
             .send()
-            .await {
-                Ok(response) => parse_response::<FileResponse>(response).await?,
-                Err(error) => return Err(Error::Request(error)),
-            };
+            .await
+        {
+            Ok(response) => parse_response::<FileResponse>(response).await?,
+            Err(error) => return Err(Error::Request(error)),
+        };
 
         dbg!(&resp);
-        
+
         if let Some(error) = resp.error {
-            return Err(Error::File(error))
+            return Err(Error::File(error));
         }
 
         if let Some(file) = resp.file {
-            return Ok(file)
+            return Ok(file);
         }
 
-        Err(Error::File(format!("No file returned from slack. Response: {resp:?}")))
+        Err(Error::File(format!(
+            "No file returned from slack. Response: {resp:?}"
+        )))
     }
 }

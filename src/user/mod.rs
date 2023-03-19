@@ -67,14 +67,19 @@ pub struct Team {
 impl UserList {
     pub async fn new(token: &str) -> Result<Self, Error> {
         let client = reqwest::Client::new();
-        let resp = match client.post("https://slack.com/api/users.list").bearer_auth(token).send().await {
-                Ok(resp) => parse_response::<UserList>(resp).await?,
-                Err(error) => return Err(Error::Request(error))
+        let resp = match client
+            .post("https://slack.com/api/users.list")
+            .bearer_auth(token)
+            .send()
+            .await
+        {
+            Ok(resp) => parse_response::<UserList>(resp).await?,
+            Err(error) => return Err(Error::Request(error)),
         };
 
         // Check for errors
         if let Some(error) = resp.error {
-            return Err(Error::User(error))
+            return Err(Error::User(error));
         }
 
         Ok(resp)

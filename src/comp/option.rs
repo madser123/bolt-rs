@@ -1,17 +1,17 @@
-use crate::parsing::SerdeDefaultSkip;
+use crate::parsing::SerializeDefaultPhantomData;
 
 use super::*;
 
 #[skip_serializing_none]
 #[derive(Deserialize, Serialize, Debug, Default, Clone)]
-pub struct OptionObject<T: SerdeDefaultSkip = Any> {
+pub struct OptionObject<T: SerializeDefaultPhantomData = Any> {
     text: Text<T>,
     value: String,
     description: Option<Text<Plain>>,
     url: Option<String>,
 }
 impl Composition for OptionObject {}
-impl<T: Default + SerdeDefaultSkip> OptionObject<T> {
+impl<T: Default + SerializeDefaultPhantomData> OptionObject<T> {
     pub fn new(text: Text<T>, value: &str) -> Self {
         Self {
             text,
@@ -45,10 +45,7 @@ pub struct OptionGroup {
 impl Composition for OptionGroup {}
 impl OptionGroup {
     pub fn new(label: Text<Plain>, options: Vec<OptionObject>) -> Self {
-        Self {
-            label,
-            options,
-        }
+        Self { label, options }
     }
 }
 impl Build for OptionGroup {

@@ -19,7 +19,8 @@ impl Filter {
     }
 
     pub fn include_many(mut self, include: Vec<&str>) -> Self {
-        self.include.append(&mut include.iter().map(|s| s.to_string()).collect());
+        self.include
+            .append(&mut include.iter().map(|s| s.to_string()).collect());
         self
     }
 
