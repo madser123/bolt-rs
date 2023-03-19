@@ -1,4 +1,6 @@
-use slack_rs as slack;
+use std::env::var;
+
+use bolt_rs as slack;
 use slack::{
     block::{self, Blocks, AsBlock, AsBlocks},
     element::{self, AsElement, AsElements},
@@ -6,8 +8,7 @@ use slack::{
     message::Message,
 };
 
-const CHANNEL_BOT_TESTING: &str = "CHANNEL";
-const SLACK_BOT_TOKEN: &str = "TOKEN";
+const TEST_CHANNEL: &str = "CHANNEL";
 
 #[test]
 #[should_panic]
@@ -30,4 +31,8 @@ fn section_too_many_fields_failure() {
 
     println!("{result:?}");
     result.unwrap();
+}
+
+fn create_app() {
+    let bot_token = var("BOT_TOKEN").unwrap();
 }
