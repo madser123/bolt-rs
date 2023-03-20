@@ -1,4 +1,4 @@
-use crate::{parsing::parse_response, pre::*};
+use crate::{parsing::parse_response, pre::*, comp::Text};
 use reqwest::{multipart, Client};
 use std::{fs, marker::PhantomData};
 
@@ -56,8 +56,8 @@ impl File {
             .collect();
 
         let (team_id, file_id, pub_secret) = (
-            #[allow(clippy::get_first)]
             // Suppress clippy warning for using "get(0)" to get the first element
+            #[allow(clippy::get_first)]
             segments.get(0).unwrap(),
             segments.get(1).unwrap(),
             segments.get(2).unwrap(),
@@ -80,8 +80,6 @@ impl File {
 
         let resp = parse_response::<FileResponse>(response).await?;
 
-        dbg!(&resp);
-
         if let Some(error) = resp.error {
             return Err(Error::File(error));
         }
@@ -95,12 +93,8 @@ impl File {
         Ok(resp.file.unwrap())
     }
 }
-
-#[derive(Debug, Default)]
-pub struct Nothing;
-
 #[derive(Default, Debug)]
-pub struct Upload<C = Nothing> {
+pub struct Upload<C = Text> {
     c: PhantomData<C>,
 
     channels: Option<String>,
@@ -136,9 +130,9 @@ impl Upload {
         }
     }
 
-    pub fn from_text(text: &str) -> Upload<File> {
-        Upload::<File> {
-            c: PhantomData::<File>,
+    pub fn from_text(text: &str) -> Upload<Text> {
+        Upload::<Text> {
+            c: PhantomData::<Text>,
             content: Some(text.to_string()),
             ..Default::default()
         }
@@ -177,7 +171,7 @@ impl<C> Upload<C> {
     }
 }
 
-impl Upload<Nothing> {
+impl Upload<Text> {
     pub fn file(self, file: Vec<u8>) -> Upload<File> {
         Upload::<File> {
             c: PhantomData::<File>,
@@ -189,11 +183,6 @@ impl Upload<Nothing> {
 
 impl Upload<File> {
     pub async fn upload(self, token: &str) -> Result<File, Error> {
-        if self.file.is_none() && self.content.is_none() {
-            return Err(Error::File(
-                "No file-contents (content() or file() is required.)".to_string(),
-            ));
-        }
         let client = Client::new();
         let mut req = multipart::Form::new().text("token", token.to_owned());
 
@@ -231,8 +220,6 @@ impl Upload<File> {
             Ok(response) => parse_response::<FileResponse>(response).await?,
             Err(error) => return Err(Error::Request(error)),
         };
-
-        dbg!(&resp);
 
         if let Some(error) = resp.error {
             return Err(Error::File(error));

@@ -1,23 +1,4 @@
 use crate::{parsing::parse_response, pre::*};
-
-#[skip_serializing_none]
-#[derive(Deserialize, Serialize, Debug, Default)]
-pub struct ConversationStarter {
-    channel: Option<String>,
-    prevent_creation: Option<bool>,
-    return_im: Option<bool>,
-    users: Vec<String>,
-}
-
-#[skip_serializing_none]
-#[derive(Deserialize, Serialize, Debug)]
-pub struct Conversation {
-    pub channel: Option<String>,
-    pub prevent_creation: Option<bool>,
-    pub return_im: Option<bool>,
-    pub users: Option<String>,
-}
-
 #[skip_serializing_none]
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Channel {
@@ -44,11 +25,31 @@ pub struct ConversationResponse {
     pub error: Option<String>,
 }
 
-impl ConversationStarter {
-    pub fn new() -> Self {
-        Self::default()
-    }
+#[skip_serializing_none]
+#[derive(Deserialize, Serialize, Debug)]
+pub struct Conversation {
+    pub channel: Option<String>,
+    pub prevent_creation: Option<bool>,
+    pub return_im: Option<bool>,
+    pub users: Option<String>,
+}
 
+impl Conversation {
+    pub fn start_new() -> Starter {
+        Starter::default()
+    }
+}
+
+#[skip_serializing_none]
+#[derive(Deserialize, Serialize, Debug, Default)]
+pub struct Starter {
+    channel: Option<String>,
+    prevent_creation: Option<bool>,
+    return_im: Option<bool>,
+    users: Vec<String>,
+}
+
+impl Starter {
     pub fn add_user(mut self, user: &str) -> Self {
         self.users.push(user.to_string());
         self

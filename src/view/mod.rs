@@ -1,5 +1,4 @@
 use std::{collections::HashMap, fmt::Debug};
-
 use serde::de::DeserializeOwned;
 
 use crate::{
@@ -7,6 +6,7 @@ use crate::{
     comp::{Plain, Text},
     core::{state::State, Build},
     parsing::{default_phantomdata, parse_response, SerializeDefaultPhantomData},
+    surface::*,
     pre::*,
 };
 
@@ -46,18 +46,6 @@ pub struct ViewResponse<T: SerializeDefaultPhantomData> {
     error: Option<String>,
     response_metadata: Option<HashMap<String, Vec<String>>>,
 }
-
-#[derive(Deserialize, Serialize, Default, Debug, Clone)]
-pub struct HomeTab {}
-impl SerializeDefaultPhantomData for HomeTab {}
-
-#[derive(Deserialize, Serialize, Default, Debug, Clone)]
-pub struct Modal {}
-impl SerializeDefaultPhantomData for Modal {}
-
-#[derive(Deserialize, Serialize, Default, Debug, Clone)]
-pub struct ModalResponse {}
-impl SerializeDefaultPhantomData for ModalResponse {}
 
 #[skip_serializing_none]
 #[derive(Deserialize, Serialize, Debug, Clone, Default)]
@@ -129,8 +117,6 @@ impl<T: DeserializeOwned + Serialize + SerializeDefaultPhantomData + Debug> View
             Ok(resp) => parse_response(resp).await?,
             Err(error) => return Err(Error::Request(error)),
         };
-
-        dbg!(&resp);
 
         if let Some(error) = resp.error {
             return Err(Error::View(error, resp.response_metadata));

@@ -5,7 +5,7 @@ use super::*;
 pub struct DatetimePicker {
     r#type: String,
     action_id: String,
-    // UNUIX timestamp in seconds
+    /// UNUIX timestamp in seconds
     initial_date_time: Option<String>,
     confirm: Option<Confirmation>,
     focus_on_load: Option<bool>,

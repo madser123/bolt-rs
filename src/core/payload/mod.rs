@@ -2,7 +2,8 @@ use super::*;
 use crate::{
     comp::{Any, Text},
     user::Team,
-    view::{ModalResponse, View},
+    view::View,
+    surface::ModalResponse,
 };
 
 // Types

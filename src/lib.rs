@@ -7,12 +7,16 @@ mod core;
 
 pub mod block;
 pub mod comp;
-pub mod conversation;
 pub mod element;
-pub mod file;
-pub mod message;
 pub mod user;
+pub mod file;
 pub mod view;
+pub mod message;
+pub mod surface;
+
+pub use crate::file::{File, Upload};
+pub use crate::view::View;
+pub use crate::message::{Message, MessageAble};
 
 pub use crate::core::parsing;
 pub use crate::core::payload;
