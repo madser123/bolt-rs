@@ -3,7 +3,11 @@ use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 use serde_with::skip_serializing_none;
 
-use crate::{core::Error, parsing::parse_response};
+use crate::{
+    Error, 
+    parsing::{SlackResponse}, 
+    SlackResult
+};
 
 #[skip_serializing_none]
 #[derive(Deserialize, Serialize, Clone, Debug)]
@@ -65,27 +69,57 @@ pub struct Team {
 }
 
 impl UserList {
-    pub async fn new(token: &str) -> Result<Self, Error> {
+    pub async fn new(token: &str) -> SlackResult<Self> {
         let client = reqwest::Client::new();
-        let resp = match client
+        let resp = client
             .post("https://slack.com/api/users.list")
             .bearer_auth(token)
             .send()
-            .await
-        {
-            Ok(resp) => parse_response::<UserList>(resp).await?,
-            Err(error) => return Err(Error::Request(error)),
-        };
+            .await?;
+
+        let result: SlackResponse<Self> = SlackResponse::from_json(resp).await?;
 
         // Check for errors
-        if let Some(error) = resp.error {
-            return Err(Error::User(error));
+        if !result.is_ok() {
+            return Err(Error::User(result.error()))
         }
 
-        Ok(resp)
+        if let Some(list) = result.value() {
+            return Ok(list)
+        }
+
+        Err(Error::User("Recieved an OK response and an empty value?!".to_string()))
     }
 
     pub fn get_members(self) -> Option<Vec<User>> {
         self.members
+    }
+}
+
+impl User {
+    pub async fn from_id(token: &str, id: &str) {
+        todo!()
+    }
+
+    pub async fn from_email(token: &str, email: &str) -> SlackResult<Self> {
+        let client = reqwest::Client::new();
+        let resp = client
+            .get("https://slack.com/api/users.lookupByEmail")
+            .bearer_auth(token)
+            .send()
+            .await?;
+
+        let result: SlackResponse<Self> = SlackResponse::from_json(resp).await?;
+
+        // Check for errors
+        if !result.is_ok() {
+            return Err(Error::User(result.error()))
+        }
+
+        if let Some(user) = result.value() {
+            return Ok(user)
+        }
+
+        Err(Error::User("Recieved an OK response and an empty value?!".to_string()))
     }
 }

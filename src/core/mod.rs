@@ -8,6 +8,8 @@ pub mod parsing;
 pub mod payload;
 pub mod state;
 
+pub type SlackResult<T> = Result<T, Error>;
+
 #[derive(Debug)]
 pub enum Error {
     Block(String, String),
@@ -20,7 +22,7 @@ pub enum Error {
     Parsing(String, String),
     Request(reqwest::Error),
     User(String),
-    View(String, Option<HashMap<String, Vec<String>>>),
+    View(String),
 }
 
 impl Display for Error {
@@ -56,8 +58,8 @@ impl Display for Error {
             Error::User(error) => {
                 write!(f, "User error: {error}")
             }
-            Error::View(error, meta) => {
-                write!(f, "View error: {error} | Metadata: {meta:#?}")
+            Error::View(error) => {
+                write!(f, "View error: {error}")
             }
         }
     }

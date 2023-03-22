@@ -5,7 +5,7 @@ use crate::{
     block::Blocks,
     comp::{Plain, Text},
     core::{state::State, Build},
-    parsing::{default_phantomdata, parse_response, SerializeDefaultPhantomData},
+    parsing::{default_phantomdata, SerializeDefaultPhantomData},
     surface::*,
     pre::*,
 };
@@ -36,15 +36,7 @@ impl<T: Serialize + SerializeDefaultPhantomData> ViewController<T> {
 }
 
 pub trait AsView<T: SerializeDefaultPhantomData> {
-    fn as_view(&self) -> Result<View<T>, Error>;
-}
-
-#[derive(Deserialize, Serialize, Debug, Clone, Default)]
-pub struct ViewResponse<T: SerializeDefaultPhantomData> {
-    ok: bool,
-    view: Option<View<T>>,
-    error: Option<String>,
-    response_metadata: Option<HashMap<String, Vec<String>>>,
+    fn as_view(&self) -> SlackResult<View<T>>;
 }
 
 #[skip_serializing_none]
@@ -104,43 +96,39 @@ impl<T: DeserializeOwned + Serialize + SerializeDefaultPhantomData + Debug> View
         self
     }
 
-    pub async fn open(self, trigger_id: &str, token: &str) -> Result<(), Error> {
+    pub async fn open(self, trigger_id: &str, token: &str) -> SlackResult<()> {
         let client = reqwest::Client::new();
         let json = ViewController::trigger(trigger_id, self);
-        let resp: ViewResponse<T> = match client
+        let resp = client
             .post("https://slack.com/api/views.open")
             .bearer_auth(token)
             .json(&json)
             .send()
-            .await
-        {
-            Ok(resp) => parse_response(resp).await?,
-            Err(error) => return Err(Error::Request(error)),
-        };
+            .await?;
 
-        if let Some(error) = resp.error {
-            return Err(Error::View(error, resp.response_metadata));
+        let result: SlackResponse<Self> = SlackResponse::from_json(resp).await?;
+
+        if !result.is_ok() {
+            return Err(Error::View(result.error()))
         }
 
         Ok(())
     }
 
-    pub async fn update(self, token: &str) -> Result<(), Error> {
+    pub async fn update(self, token: &str) -> SlackResult<()> {
         let client = reqwest::Client::new();
         let json = ViewController::update(self);
-        let resp: ViewResponse<T> = match client
+        let resp = client
             .post("https://slack.com/api/views.update")
             .bearer_auth(token)
             .json(&json)
             .send()
-            .await
-        {
-            Ok(resp) => parse_response(resp).await?,
-            Err(error) => return Err(Error::Request(error)),
-        };
+            .await?;
 
-        if let Some(error) = resp.error {
-            return Err(Error::View(error, resp.response_metadata));
+        let result: SlackResponse<Self> = SlackResponse::from_json(resp).await?;
+
+        if !result.is_ok() {
+            return Err(Error::View(result.error()))
         }
 
         Ok(())
@@ -188,18 +176,15 @@ impl View<ModalResponse> {
         self.private_metadata.as_ref().unwrap()
     }
 
-    pub fn get_state_value(&self, block_id: &str, action_id: &str) -> Result<String, Error> {
+    pub fn get_state_value(&self, block_id: &str, action_id: &str) -> SlackResult<String> {
         if self.state.is_none() {
-            return Err(Error::View(format!("Couldn't get state-value block: '{block_id}' action: '{action_id}'. No state found."), None));
+            return Err(Error::View(format!("Couldn't get state-value block: '{block_id}' action: '{action_id}'. No state found.")));
         }
 
         let block = match self.state.as_ref().unwrap().values.get(block_id) {
             Some(b) => b,
             None => {
-                return Err(Error::View(
-                    format!("Couldn't get state value of block: '{block_id}'"),
-                    None,
-                ))
+                return Err(Error::View(format!("Couldn't get state value of block: '{block_id}'")))
             }
         };
 
@@ -209,9 +194,6 @@ impl View<ModalResponse> {
             }
         }
 
-        Err(Error::View(
-            format!("Couldn't get state value of block: '{block_id}' action: '{action_id}'"),
-            None,
-        ))
+        Err(Error::View(format!("Couldn't get state value of block: '{block_id}' action: '{action_id}'")))
     }
 }

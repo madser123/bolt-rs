@@ -23,3 +23,4 @@ pub use crate::app::{App, Auth};
 pub use crate::core::parsing;
 pub use crate::core::payload;
 pub use crate::core::Error;
+pub use crate::core::SlackResult;

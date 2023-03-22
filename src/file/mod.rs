@@ -1,13 +1,6 @@
-use crate::{parsing::parse_response, pre::*, comp::Text};
+use crate::{pre::*, comp::Text};
 use reqwest::{multipart, Client};
 use std::{fs, marker::PhantomData};
-
-#[derive(Deserialize, Serialize, Debug)]
-pub struct FileResponse {
-    ok: bool,
-    file: Option<File>,
-    error: Option<String>,
-}
 
 #[derive(Deserialize, Serialize, Debug, Default)]
 pub struct File {
@@ -72,25 +65,24 @@ impl File {
             .text("token", token.to_owned())
             .text("file", self.id);
 
-        let response = client
+        let resp = client
             .post("https://slack.com/api/files.sharedPublicURL")
             .multipart(req)
             .send()
             .await?;
 
-        let resp = parse_response::<FileResponse>(response).await?;
+        let result: SlackResponse<Self> = SlackResponse::from_json(resp).await?;
 
-        if let Some(error) = resp.error {
-            return Err(Error::File(error));
+        // Check for errors
+        if !result.is_ok() {
+            return Err(Error::User(result.error()))
         }
 
-        if resp.file.is_none() {
-            return Err(Error::File(format!(
-                "No file returned from slack. Response: {resp:?}"
-            )));
+        if let Some(list) = result.value() {
+            return Ok(list)
         }
 
-        Ok(resp.file.unwrap())
+        Err(Error::User("Recieved an OK response and an empty value?!".to_string()))
     }
 }
 #[derive(Default, Debug)]
@@ -211,26 +203,23 @@ impl Upload<File> {
             req = req.text("title", title);
         }
 
-        let resp = match client
+        let resp = client
             .post("https://slack.com/api/files.upload")
             .multipart(req)
             .send()
-            .await
-        {
-            Ok(response) => parse_response::<FileResponse>(response).await?,
-            Err(error) => return Err(Error::Request(error)),
-        };
+            .await?;
 
-        if let Some(error) = resp.error {
-            return Err(Error::File(error));
+        let result: SlackResponse<File> = SlackResponse::from_json(resp).await?;
+
+        // Check for errors
+        if !result.is_ok() {
+            return Err(Error::User(result.error()))
         }
 
-        if let Some(file) = resp.file {
-            return Ok(file);
+        if let Some(list) = result.value() {
+            return Ok(list)
         }
 
-        Err(Error::File(format!(
-            "No file returned from slack. Response: {resp:?}"
-        )))
+        Err(Error::User("Recieved an OK response and an empty value?!".to_string()))
     }
 }
