@@ -1,53 +1,25 @@
-use std::{collections::HashMap, fmt::Debug};
+use std::fmt::Debug;
+use crate::pre::*;
+use comp::{Text, Plain};
 use serde::de::DeserializeOwned;
 
-use crate::{
-    block::Blocks,
-    comp::{Plain, Text},
-    core::{state::State, Build},
-    parsing::{default_phantomdata, SerializeDefaultPhantomData},
-    surface::*,
-    pre::*,
-};
+mod controller;
 
-#[derive(Deserialize, Serialize, Debug, Clone, Default)]
-pub struct ViewController<T: Serialize + SerializeDefaultPhantomData> {
-    view: View<T>,
-    trigger_id: Option<String>,
-    external_id: Option<String>,
-}
+pub use controller::Controller;
 
-impl<T: Serialize + SerializeDefaultPhantomData> ViewController<T> {
-    pub fn trigger(trigger: &str, view: View<T>) -> Self {
-        ViewController {
-            view,
-            trigger_id: Some(trigger.to_string()),
-            external_id: None,
-        }
-    }
-
-    pub fn update(view: View<T>) -> Self {
-        ViewController {
-            external_id: view.external_id.clone(),
-            view,
-            trigger_id: None,
-        }
-    }
-}
-
-pub trait AsView<T: SerializeDefaultPhantomData> {
-    fn as_view(&self) -> SlackResult<View<T>>;
+pub trait AsView<T: parsing::SerializeDefaultPhantomData> {
+    fn as_view(&self) -> BoltResult<View<T>>;
 }
 
 #[skip_serializing_none]
 #[derive(Deserialize, Serialize, Debug, Clone, Default)]
-pub struct View<T: SerializeDefaultPhantomData = ModalResponse> {
-    #[serde(default, deserialize_with = "default_phantomdata", skip_serializing)]
+pub struct View<T: parsing::SerializeDefaultPhantomData = ModalResponse> {
+    #[serde(default, deserialize_with = "parsing::default_phantomdata", skip_serializing)]
     t: std::marker::PhantomData<T>,
 
     r#type: String,
     title: Option<Text<Plain>>,
-    blocks: Option<Blocks>,
+    blocks: Option<block::Blocks>,
     close: Option<Text<Plain>>,
     submit: Option<Text<Plain>>,
     private_metadata: Option<String>,
@@ -58,20 +30,18 @@ pub struct View<T: SerializeDefaultPhantomData = ModalResponse> {
     submit_disabled: Option<bool>,
 
     // For usage in submission payload:
-    state: Option<State>,
+    state: Option<state::State>,
 }
 impl View {
-    pub fn home(blocks: Blocks) -> View<HomeTab> {
+    pub fn home(blocks: block::Blocks) -> View<HomeTab> {
         View::<HomeTab> {
-            t: std::marker::PhantomData::<HomeTab>,
-
             r#type: "home".to_string(),
             blocks: Some(blocks),
             ..Default::default()
         }
     }
 
-    pub fn modal(title: Text<Plain>, blocks: Blocks) -> View<Modal> {
+    pub fn modal(title: Text<Plain>, blocks: block::Blocks) -> View<Modal> {
         View::<Modal> {
             r#type: "modal".to_string(),
             title: Some(title),
@@ -80,7 +50,7 @@ impl View {
         }
     }
 }
-impl<T: DeserializeOwned + Serialize + SerializeDefaultPhantomData + Debug> View<T> {
+impl<T: DeserializeOwned + Serialize + parsing::SerializeDefaultPhantomData + Debug> View<T> {
     pub fn private_metadata(mut self, data: &str) -> Self {
         self.private_metadata = Some(data.to_string());
         self
@@ -96,42 +66,20 @@ impl<T: DeserializeOwned + Serialize + SerializeDefaultPhantomData + Debug> View
         self
     }
 
-    pub async fn open(self, trigger_id: &str, token: &str) -> SlackResult<()> {
-        let client = reqwest::Client::new();
-        let json = ViewController::trigger(trigger_id, self);
-        let resp = client
-            .post("https://slack.com/api/views.open")
-            .bearer_auth(token)
-            .json(&json)
+    pub async fn open(self, trigger_id: &str, token: &str) -> BoltResult<()> {
+        Request::post("views.open", token)
+            .json(&Controller::trigger(trigger_id, self))
             .send()
-            .await?;
-
-        let result: SlackResponse<Self> = SlackResponse::from_json(resp).await?;
-
-        if !result.is_ok() {
-            return Err(Error::View(result.error()))
-        }
-
-        Ok(())
+            .await?
+            .unpack()
     }
 
-    pub async fn update(self, token: &str) -> SlackResult<()> {
-        let client = reqwest::Client::new();
-        let json = ViewController::update(self);
-        let resp = client
-            .post("https://slack.com/api/views.update")
-            .bearer_auth(token)
-            .json(&json)
+    pub async fn update(self, token: &str) -> BoltResult<()> {
+        Request::post("views.update", token)
+            .json(&Controller::update(self))
             .send()
-            .await?;
-
-        let result: SlackResponse<Self> = SlackResponse::from_json(resp).await?;
-
-        if !result.is_ok() {
-            return Err(Error::View(result.error()))
-        }
-
-        Ok(())
+            .await?
+            .unpack()
     }
 }
 impl View<HomeTab> {}
@@ -161,7 +109,7 @@ impl View<Modal> {
     //    self
     //}
 }
-impl<T: SerializeDefaultPhantomData> Build for View<T> {
+impl<T: parsing::SerializeDefaultPhantomData> Build for View<T> {
     fn get_type(&self) -> String {
         self.r#type.clone()
     }
@@ -176,7 +124,7 @@ impl View<ModalResponse> {
         self.private_metadata.as_ref().unwrap()
     }
 
-    pub fn get_state_value(&self, block_id: &str, action_id: &str) -> SlackResult<String> {
+    pub fn get_state_value(&self, block_id: &str, action_id: &str) -> BoltResult<String> {
         if self.state.is_none() {
             return Err(Error::View(format!("Couldn't get state-value block: '{block_id}' action: '{action_id}'. No state found.")));
         }

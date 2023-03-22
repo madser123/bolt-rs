@@ -1,21 +1,6 @@
-use crate::{block::Blocks, element::Elements, parsing::parse_response, pre::*};
-
-#[skip_serializing_none]
-#[derive(Deserialize, Serialize, Debug)]
-pub struct MessageResponse {
-    ok: bool,
-    channel: Option<String>,
-    ts: Option<String>,
-    error: Option<String>,
-}
-
-#[skip_serializing_none]
-#[derive(Deserialize, Serialize, Debug)]
-pub struct Response {
-    pub channel: Option<String>,
-    pub ts: Option<String>,
-}
-
+use crate::pre::*;
+use block::Blocks;
+use element::Elements;
 #[skip_serializing_none]
 #[derive(Deserialize, Serialize, Debug, Default)]
 pub struct Message {
@@ -51,28 +36,15 @@ impl Message {
         self
     }
 
-    pub async fn post(self, token: &str) -> Result<Response, Error> {
-        let client = reqwest::Client::new();
-        let resp = client
-            .post("https://slack.com/api/chat.postMessage")
-            .bearer_auth(token)
+    pub async fn post(self, token: &str) -> BoltResult<Self> {
+        Request::post("chat.postMessage", token)
             .json(&self)
             .send()
-            .await?;
-
-        let resp = parse_response::<MessageResponse>(resp).await?;
-
-        if let Some(error) = resp.error {
-            return Err(Error::Message(error));
-        }
-
-        Ok(Response {
-            channel: resp.channel,
-            ts: resp.ts,
-        })
+            .await?
+            .unpack()
     }
 }
 
-pub trait MessageAble {
-    fn into_message(self) -> Result<Message, Error>;
+pub trait AsMessage {
+    fn as_message(&self) -> BoltResult<Message>;
 }

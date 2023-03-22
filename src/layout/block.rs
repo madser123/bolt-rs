@@ -1,9 +1,4 @@
-use crate::{
-    comp::{Any, Plain, Text},
-    core::Build,
-    element::{ActionsElement, ContextElement, Element, InputElement, SectionElement},
-    pre::*,
-};
+use super::*;
 
 mod actions;
 mod context;
@@ -13,7 +8,7 @@ mod header;
 mod image;
 mod input;
 mod section;
-mod video;
+mod video; 
 
 pub use actions::Actions;
 pub use context::Context;
@@ -30,17 +25,17 @@ pub trait Block: Build {}
 /// Convert any type into blocks!
 pub trait AsBlocks {
     /// Turns `self` into a list of `Blocks`
-    fn as_blocks(&self) -> Result<Blocks, Error>;
+    fn as_blocks(&self) -> BoltResult<Blocks>;
 }
 
 pub trait AsBlock<T: Block> {
     /// Turns `self` into a `Block` of type `T`
-    fn as_block(&self) -> Result<T, Error>;
+    fn as_block(&self) -> BoltResult<T>;
 }
 
-pub trait ModalBlock {}
-pub trait MessagesBlock {}
-pub trait HometabBlock {}
+trait ModalBlock {}
+trait MessagesBlock {}
+trait HometabBlock {}
 
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
 pub struct Blocks(Vec<json::Value>);
@@ -58,12 +53,12 @@ impl Blocks {
         self.0.is_empty()
     }
 
-    pub fn push(&mut self, block: impl Block) -> Result<(), Error> {
+    pub fn push(&mut self, block: impl Block) -> BoltResult<()> {
         self.0.push(block.build()?);
         Ok(())
     }
 
-    pub fn append(&mut self, blocks: Vec<impl Block>) -> Result<(), Error> {
+    pub fn append(&mut self, blocks: Vec<impl Block>) -> BoltResult<()> {
         for b in blocks {
             self.push(b)?;
         }

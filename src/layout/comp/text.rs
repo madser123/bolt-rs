@@ -1,25 +1,21 @@
 use super::*;
-use crate::{
-    element::{ContextElement, Element},
-    parsing::{default_phantomdata, SerializeDefaultPhantomData},
-};
 
 #[derive(Deserialize, Serialize, Debug, Clone, Default)]
 pub struct Plain;
-impl SerializeDefaultPhantomData for Plain {}
+impl parsing::SerializeDefaultPhantomData for Plain {}
 
 #[derive(Deserialize, Serialize, Debug, Clone, Default)]
 pub struct Markdown;
-impl SerializeDefaultPhantomData for Markdown {}
+impl parsing::SerializeDefaultPhantomData for Markdown {}
 
 #[derive(Deserialize, Serialize, Debug, Clone, Default)]
 pub struct Any;
-impl SerializeDefaultPhantomData for Any {}
+impl parsing::SerializeDefaultPhantomData for Any {}
 
 #[skip_serializing_none]
 #[derive(Deserialize, Serialize, Debug, Clone)]
-pub struct Text<T: SerializeDefaultPhantomData = Any> {
-    #[serde(default, deserialize_with = "default_phantomdata", skip_serializing)]
+pub struct Text<T: parsing::SerializeDefaultPhantomData = Any> {
+    #[serde(default, deserialize_with = "parsing::default_phantomdata", skip_serializing)]
     t: std::marker::PhantomData<T>,
 
     #[serde(default)]
@@ -32,10 +28,10 @@ pub struct Text<T: SerializeDefaultPhantomData = Any> {
 }
 // Element and ContextElement are not really related to Text-objects,
 // but this is needed to associate the type with the 'Context' layout-block.
-impl<T: SerializeDefaultPhantomData> Element for Text<T> {}
-impl<T: SerializeDefaultPhantomData> ContextElement for Text<T> {}
-impl<T: SerializeDefaultPhantomData> Composition for Text<T> {}
-impl<T: SerializeDefaultPhantomData> Default for Text<T> {
+impl<T: parsing::SerializeDefaultPhantomData> element::Element for Text<T> {}
+impl<T: parsing::SerializeDefaultPhantomData> element::ContextElement for Text<T> {}
+impl<T: parsing::SerializeDefaultPhantomData> Composition for Text<T> {}
+impl<T: parsing::SerializeDefaultPhantomData> Default for Text<T> {
     fn default() -> Self {
         Text::<T> {
             t: std::marker::PhantomData::<T>,
@@ -68,7 +64,7 @@ impl Text {
         }
     }
 }
-impl<T: SerializeDefaultPhantomData> Text<T> {
+impl<T: parsing::SerializeDefaultPhantomData> Text<T> {
     pub fn len(&self) -> usize {
         self.text.len()
     }
@@ -89,7 +85,7 @@ impl Text<Plain> {
         self
     }
 }
-impl<T: SerializeDefaultPhantomData> Build for Text<T> {
+impl<T: parsing::SerializeDefaultPhantomData> Build for Text<T> {
     fn get_type(&self) -> String {
         "text".to_string()
     }

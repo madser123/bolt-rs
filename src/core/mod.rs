@@ -4,11 +4,17 @@ use std::{
     fmt::{Display, Formatter},
 };
 
-pub mod parsing;
 pub mod payload;
+pub mod parsing;
+pub mod response;
+pub mod request;
 pub mod state;
 
-pub type SlackResult<T> = Result<T, Error>;
+pub type BoltResult<T> = Result<T, Error>;
+
+pub trait BoltError {
+    fn error(&self, message: &str) -> Error;
+}
 
 #[derive(Debug)]
 pub enum Error {
@@ -21,6 +27,7 @@ pub enum Error {
     Message(String),
     Parsing(String, String),
     Request(reqwest::Error),
+    Response(String, String),
     User(String),
     View(String),
 }
@@ -52,6 +59,9 @@ impl Display for Error {
             Error::Parsing(object, error) => {
                 write!(f, "Parsing-error '{object}': {error}")
             }
+            Error::Response(expected, error) => {
+                write!(f, "Response-error (expected '{expected}'): {error}")
+            }
             Error::Request(error) => {
                 write!(f, "Request-error: {error}")
             }
@@ -72,7 +82,7 @@ impl From<reqwest::Error> for Error {
 }
 
 pub trait Build: Serialize {
-    fn build(&self) -> Result<json::Value, Error> {
+    fn build(&self) -> BoltResult<json::Value> {
         match json::to_value(self) {
             Ok(json) => Ok(json),
             Err(error) => Err(Error::Building(self.get_type(), error)),

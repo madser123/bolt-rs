@@ -1,37 +1,33 @@
 use super::*;
+use element::ActionsElement;
 
 #[skip_serializing_none]
 #[derive(Deserialize, Serialize, Debug)]
-pub struct Context {
+pub struct Actions {
     r#type: String,
     elements: Vec<json::Value>,
     block_id: Option<String>,
 }
-impl Block for Context {}
-impl Default for Context {
+impl Block for Actions {}
+impl Default for Actions {
     fn default() -> Self {
         Self {
-            r#type: "context".to_string(),
+            r#type: "actions".to_string(),
             elements: Vec::new(),
             block_id: None,
         }
     }
 }
-impl Context {
+impl Actions {
     pub fn new() -> Self {
         Self::default()
     }
 
     /// Add multiple elements
-    pub fn elements(mut self, elements: &mut Vec<impl ContextElement>) -> Result<Self, Error> {
+    pub fn elements(mut self, elements: Vec<impl ActionsElement>) -> BoltResult<Self> {
         for e in elements {
             self.elements.push(e.build()?);
         }
-        Ok(self)
-    }
-
-    pub fn element(mut self, element: impl ContextElement) -> Result<Self, Error> {
-        self.elements.push(element.build()?);
         Ok(self)
     }
 
@@ -41,8 +37,8 @@ impl Context {
         self
     }
 }
-impl Build for Context {
+impl Build for Actions {
     fn get_type(&self) -> String {
-        "context".to_string()
+        "actions".to_string()
     }
 }

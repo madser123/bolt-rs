@@ -1,5 +1,6 @@
-use crate::{pre::*, comp::Text};
-use reqwest::{multipart, Client};
+use crate::pre::*;
+use comp::Text;
+use reqwest::multipart::{Form, Part};
 use std::{fs, marker::PhantomData};
 
 #[derive(Deserialize, Serialize, Debug, Default)]
@@ -59,30 +60,16 @@ impl File {
         format!("https://files.slack.com/files-pri/{team_id}-{file_id}/{filename}?pub_secret={pub_secret}")
     }
 
-    pub async fn publish(self, token: &str) -> Result<Self, Error> {
-        let client = Client::new();
-        let req = multipart::Form::new()
+    pub async fn publish(self, token: &str) -> BoltResult<Self> {
+        let form = Form::new()
             .text("token", token.to_owned())
             .text("file", self.id);
 
-        let resp = client
-            .post("https://slack.com/api/files.sharedPublicURL")
-            .multipart(req)
+        Request::post("files.sharedPublicURL", token)
+            .multipart(form)
             .send()
-            .await?;
-
-        let result: SlackResponse<Self> = SlackResponse::from_json(resp).await?;
-
-        // Check for errors
-        if !result.is_ok() {
-            return Err(Error::User(result.error()))
-        }
-
-        if let Some(list) = result.value() {
-            return Ok(list)
-        }
-
-        Err(Error::User("Recieved an OK response and an empty value?!".to_string()))
+            .await?
+            .unpack()
     }
 }
 #[derive(Default, Debug)]
@@ -102,7 +89,7 @@ pub struct Upload<C = Text> {
 impl Upload {
     pub fn from_path<P: std::convert::AsRef<std::path::Path>>(
         path: P,
-    ) -> Result<Upload<File>, Error> {
+    ) -> BoltResult<Upload<File>> {
         let file = match fs::read(&path) {
             Ok(file) => file,
             Err(error) => return Err(Error::File(error.to_string())),
@@ -174,52 +161,38 @@ impl Upload<Text> {
 }
 
 impl Upload<File> {
-    pub async fn upload(self, token: &str) -> Result<File, Error> {
-        let client = Client::new();
-        let mut req = multipart::Form::new().text("token", token.to_owned());
+    pub async fn upload(self, token: &str) -> BoltResult<File> {
+        let mut form = Form::new().text("token", token.to_owned());
 
         if let Some(channels) = self.channels {
-            req = req.text("channels", channels);
+            form = form.text("channels", channels);
         }
         if let Some(content) = self.content {
-            req = req.text("content", content);
+            form = form.text("content", content);
         }
         if let Some(file) = self.file {
-            req = req.part("content", multipart::Part::bytes(file));
+            form = form.part("content", Part::bytes(file));
         }
         if let Some(filename) = self.filename {
-            req = req.text("filename", filename);
+            form = form.text("filename", filename);
         }
         if let Some(filetype) = self.filetype {
-            req = req.text("filetype", filetype);
+            form = form.text("filetype", filetype);
         }
         if let Some(comment) = self.initial_comment {
-            req = req.text("initial_comment", comment);
+            form = form.text("initial_comment", comment);
         }
         if let Some(thread_ts) = self.thread_ts {
-            req = req.text("thread_ts", thread_ts);
+            form = form.text("thread_ts", thread_ts);
         }
         if let Some(title) = self.title {
-            req = req.text("title", title);
+            form = form.text("title", title);
         }
 
-        let resp = client
-            .post("https://slack.com/api/files.upload")
-            .multipart(req)
-            .send()
-            .await?;
-
-        let result: SlackResponse<File> = SlackResponse::from_json(resp).await?;
-
-        // Check for errors
-        if !result.is_ok() {
-            return Err(Error::User(result.error()))
-        }
-
-        if let Some(list) = result.value() {
-            return Ok(list)
-        }
-
-        Err(Error::User("Recieved an OK response and an empty value?!".to_string()))
+        Request::post("files.upload", token)
+            .multipart(form)
+            .send::<File>()
+            .await?
+            .unpack()
     }
 }

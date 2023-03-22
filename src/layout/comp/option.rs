@@ -1,17 +1,15 @@
-use crate::parsing::SerializeDefaultPhantomData;
-
 use super::*;
 
 #[skip_serializing_none]
 #[derive(Deserialize, Serialize, Debug, Default, Clone)]
-pub struct OptionObject<T: SerializeDefaultPhantomData = Any> {
+pub struct OptionObject<T: parsing::SerializeDefaultPhantomData = Any> {
     text: Text<T>,
     value: String,
     description: Option<Text<Plain>>,
     url: Option<String>,
 }
 impl Composition for OptionObject {}
-impl<T: Default + SerializeDefaultPhantomData> OptionObject<T> {
+impl<T: Default + parsing::SerializeDefaultPhantomData> OptionObject<T> {
     pub fn new(text: Text<T>, value: &str) -> Self {
         Self {
             text,

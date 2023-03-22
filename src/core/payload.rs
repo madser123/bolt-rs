@@ -1,10 +1,7 @@
 use super::*;
-use crate::{
-    comp::{Any, Text},
-    user::Team,
-    view::View,
-    surface::ModalResponse,
-};
+use comp::{Text, Any};
+use view::View;
+use user::Team;
 
 // Types
 
@@ -24,10 +21,21 @@ pub struct Message {
     pub text: String,
 }
 
+#[skip_serializing_none]
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct Channel {
     pub id: String,
-    pub name: String,
+    pub name: Option<String>,
+    pub created: Option<i64>,
+    pub is_im: Option<bool>,
+    pub is_org_shared: Option<bool>,
+    pub user: Option<String>,
+    pub last_read: Option<String>,
+    //pub latest: Option<????>,
+    pub unread_count: Option<i64>,
+    pub unread_count_display: Option<i64>,
+    pub is_open: Option<bool>,
+    pub priority: Option<i32>,
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]

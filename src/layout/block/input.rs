@@ -1,4 +1,6 @@
 use super::*;
+use element::{Element, InputElement};
+use comp::{Text, Plain};
 
 #[skip_serializing_none]
 #[derive(Serialize)]

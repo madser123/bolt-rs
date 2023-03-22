@@ -1,4 +1,5 @@
 use super::*;
+use comp::{Text, Plain};
 
 #[skip_serializing_none]
 #[derive(Deserialize, Serialize, Debug)]

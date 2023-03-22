@@ -1,4 +1,6 @@
 use super::*;
+use comp::{Text, Any};
+use element::SectionElement;
 
 #[skip_serializing_none]
 #[derive(Serialize)]
@@ -52,7 +54,7 @@ impl Section {
         self
     }
 
-    pub fn accessory(mut self, element: impl SectionElement) -> Result<Self, Error> {
+    pub fn accessory(mut self, element: impl SectionElement) -> BoltResult<Self> {
         self.accessory = Some(element.build()?);
         Ok(self)
     }

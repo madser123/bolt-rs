@@ -1,13 +1,7 @@
+use crate::pre::*;
+
 use std::collections::HashMap;
-
-use serde::{Deserialize, Serialize};
-use serde_with::skip_serializing_none;
-
-use crate::{
-    Error, 
-    parsing::{SlackResponse}, 
-    SlackResult
-};
+use reqwest::multipart;
 
 #[skip_serializing_none]
 #[derive(Deserialize, Serialize, Clone, Debug)]
@@ -69,26 +63,11 @@ pub struct Team {
 }
 
 impl UserList {
-    pub async fn new(token: &str) -> SlackResult<Self> {
-        let client = reqwest::Client::new();
-        let resp = client
-            .post("https://slack.com/api/users.list")
-            .bearer_auth(token)
+    pub async fn new(token: &str) -> BoltResult<Self> {
+        Request::post("users.list", token)
             .send()
-            .await?;
-
-        let result: SlackResponse<Self> = SlackResponse::from_json(resp).await?;
-
-        // Check for errors
-        if !result.is_ok() {
-            return Err(Error::User(result.error()))
-        }
-
-        if let Some(list) = result.value() {
-            return Ok(list)
-        }
-
-        Err(Error::User("Recieved an OK response and an empty value?!".to_string()))
+            .await?
+            .unpack()
     }
 
     pub fn get_members(self) -> Option<Vec<User>> {
@@ -101,25 +80,13 @@ impl User {
         todo!()
     }
 
-    pub async fn from_email(token: &str, email: &str) -> SlackResult<Self> {
-        let client = reqwest::Client::new();
-        let resp = client
-            .get("https://slack.com/api/users.lookupByEmail")
-            .bearer_auth(token)
+    pub async fn from_email(token: &str, email: &str) -> BoltResult<Self> {
+        Request::get("users.lookupByEmail", token)
+            .multipart(multipart::Form::new()
+                .text("email", email.to_string()
+            ))
             .send()
-            .await?;
-
-        let result: SlackResponse<Self> = SlackResponse::from_json(resp).await?;
-
-        // Check for errors
-        if !result.is_ok() {
-            return Err(Error::User(result.error()))
-        }
-
-        if let Some(user) = result.value() {
-            return Ok(user)
-        }
-
-        Err(Error::User("Recieved an OK response and an empty value?!".to_string()))
+            .await?
+            .unpack()
     }
 }

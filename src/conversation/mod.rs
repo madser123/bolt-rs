@@ -1,7 +1,8 @@
-use crate::{parsing::parse_response, pre::*};
+use crate::pre::*;
+
 #[skip_serializing_none]
 #[derive(Deserialize, Serialize, Debug)]
-pub struct Channel {
+pub struct Conversation {
     pub id: String,
     pub created: Option<i64>,
     pub is_im: Option<bool>,
@@ -15,28 +16,13 @@ pub struct Channel {
     pub priority: Option<i32>,
 }
 
-#[skip_serializing_none]
-#[derive(Deserialize, Serialize, Debug)]
-pub struct ConversationResponse {
-    pub ok: bool,
-    pub no_op: Option<bool>,
-    pub already_open: Option<bool>,
-    pub channel: Option<Channel>,
-    pub error: Option<String>,
-}
-
-#[skip_serializing_none]
-#[derive(Deserialize, Serialize, Debug)]
-pub struct Conversation {
-    pub channel: Option<String>,
-    pub prevent_creation: Option<bool>,
-    pub return_im: Option<bool>,
-    pub users: Option<String>,
-}
-
 impl Conversation {
     pub fn start_new() -> Starter {
         Starter::default()
+    }
+
+    pub fn send(self) -> BoltResult<Conversation> {
+        todo!()
     }
 }
 
@@ -50,6 +36,14 @@ pub struct Starter {
 }
 
 impl Starter {
+    pub async fn start(self, token: &str) -> BoltResult<Conversation> {
+        Request::post("conversations.open", token)
+            .json(&self)
+            .send()
+            .await?
+            .unpack()
+    }
+
     pub fn add_user(mut self, user: &str) -> Self {
         self.users.push(user.to_string());
         self
@@ -68,56 +62,5 @@ impl Starter {
     pub fn prevent_creation(mut self, prevent: bool) -> Self {
         self.prevent_creation = Some(prevent);
         self
-    }
-
-    pub fn build(self) -> Result<json::Value, Error> {
-        let users = if self.users.is_empty() {
-            None
-        } else if self.users.len() > 1 {
-            Some(
-                self.users
-                    .iter()
-                    .map(|x| x.to_string() + ",")
-                    .collect::<String>(),
-            )
-        } else {
-            Some(self.users.get(0).unwrap().to_string())
-        };
-
-        match json::to_value(Conversation {
-            channel: self.channel,
-            prevent_creation: self.prevent_creation,
-            return_im: self.return_im,
-            users,
-        }) {
-            Ok(conversation) => Ok(conversation),
-            Err(error) => Err(Error::Parsing(
-                "Conversation".to_string(),
-                error.to_string(),
-            )),
-        }
-    }
-
-    pub async fn start(self, token: &str) -> Result<ConversationResponse, Error> {
-        let client = reqwest::Client::new();
-        let json = self.build()?;
-        let resp = match client
-            .post("https://slack.com/api/conversations.open")
-            .bearer_auth(token)
-            .json(&json)
-            .send()
-            .await
-        {
-            Ok(resp) => resp,
-            Err(error) => return Err(Error::Request(error)),
-        };
-
-        let conversation = parse_response::<ConversationResponse>(resp).await?;
-
-        if let Some(error) = conversation.error {
-            return Err(Error::Conversation(error));
-        }
-
-        Ok(conversation)
     }
 }

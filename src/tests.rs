@@ -1,12 +1,12 @@
 #[cfg(test)]
 mod test {
-    use crate::{core::Build, *};
-    use serde_json::json;
-    use std::vec;
-
+    use crate::pre::*;
     use block::{AsBlock, AsBlocks, Blocks};
     use comp::Text;
-    use message::MessageAble;
+    use message::{AsMessage, Message};
+
+    use json::json;
+    
 
     #[derive(Clone)]
     pub struct TestUser {
@@ -20,31 +20,36 @@ mod test {
     }
 
     impl AsBlocks for TestList {
-        fn as_blocks(&self) -> Result<Blocks, Error> {
+        fn as_blocks(&self) -> BoltResult<Blocks> {
             let mut blocks = Blocks::new();
+
             blocks.push(block::Header::new(Text::plain(self.name)))?;
+
             for u in &self.users {
                 blocks.push(u.as_block()?)?;
             }
+
             Ok(blocks)
         }
     }
 
     impl AsBlock<block::Section> for TestUser {
-        fn as_block(&self) -> Result<block::Section, Error> {
+        fn as_block(&self) -> BoltResult<block::Section> {
             Ok(block::Section::new()
                 .field(Text::mrkdwn(&format!("- Id: {}", self.id)).into())
                 .field(Text::mrkdwn(&format!("- Name: {}", self.name)).into())
-                .field(Text::mrkdwn(&format!("- Webpage: {}", self.url)).into()))
+                .field(Text::mrkdwn(&format!("- Webpage: {}", self.url)).into())
+            )
         }
     }
 
-    impl MessageAble for TestList {
-        fn into_message(self) -> Result<message::Message, Error> {
+    impl AsMessage for TestList {
+        fn as_message(&self) -> BoltResult<Message> {
             Ok(message::Message::new()
                 .channel("XXXXXX")
                 .text("Test")
-                .blocks(self.as_blocks()?))
+                .blocks(self.as_blocks()?)
+            )
         }
     }
 
@@ -170,7 +175,7 @@ mod test {
 
     #[test]
     fn messageable_simple() {
-        let t = serde_json::to_value(get_test_types().2.into_message().unwrap()).unwrap();
+        let t = serde_json::to_value(get_test_types().2.as_message().unwrap()).unwrap();
         println!("{t}");
         assert_eq!(
             t,

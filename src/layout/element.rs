@@ -1,16 +1,6 @@
-use crate::{
-    block::{Actions, Input, Section},
-    comp::{
-        Any, Confirmation, DispatchActionConfig, Filter, OptionGroup, OptionObject, Plain, Style,
-        Text,
-    },
-    core::Build,
-    Error,
-};
-
-use serde::{Deserialize, Serialize};
-use serde_json as json;
-use serde_with::skip_serializing_none;
+use super::*;
+use block::{Actions, Input, Section};
+use comp::*;
 
 mod button;
 mod checkboxes;
@@ -46,18 +36,18 @@ pub trait Element: Build {}
 
 pub trait AsElements {
     /// Turns `self` into a list of `Elements`
-    fn as_elements(&self) -> Result<Elements, Error>;
+    fn as_elements(&self) -> BoltResult<Elements>;
 }
 pub trait AsElement {
     /// Turns `self` into an `Element` of type `T`
-    fn as_element<T: Element>(&self) -> Result<T, Error>;
+    fn as_element<T: Element>(&self) -> BoltResult<T>;
 }
 
 pub trait SectionElement: Element
 where
     Self: Sized,
 {
-    fn into_section_as_accessory(self) -> Result<Section, Error> {
+    fn into_section_as_accessory(self) -> BoltResult<Section> {
         Section::new().accessory(self)
     }
 }
@@ -66,7 +56,7 @@ pub trait ActionsElement: Element
 where
     Self: Sized,
 {
-    fn into_actions(self) -> Result<Actions, Error> {
+    fn into_actions(self) -> BoltResult<Actions> {
         Actions::new().elements(vec![self])
     }
 }
@@ -88,12 +78,12 @@ impl Elements {
         Self::default()
     }
 
-    pub fn push(&mut self, element: &impl Element) -> Result<(), Error> {
+    pub fn push(&mut self, element: &impl Element) -> BoltResult<()> {
         self.0.push(element.build()?);
         Ok(())
     }
 
-    pub fn append(&mut self, elements: &mut Vec<impl Element>) -> Result<(), Error> {
+    pub fn append(&mut self, elements: &mut Vec<impl Element>) -> BoltResult<()> {
         for e in elements {
             self.push(e)?;
         }
