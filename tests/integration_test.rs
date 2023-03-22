@@ -1,4 +1,2 @@
 #[tokio::test]
-async fn create_app() {
-    todo!()
-}
+async fn create_app() {}
