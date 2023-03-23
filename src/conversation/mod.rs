@@ -1,6 +1,8 @@
 use crate::pre::*;
 use reqwest::multipart::Form;
-use message::Message;
+use message::{Message, AsMessage};
+use block::Blocks;
+use element::Elements;
 
 #[skip_serializing_none]
 #[derive(Deserialize, Serialize, Debug)]
@@ -19,6 +21,10 @@ pub struct Conversation {
 }
 
 impl Conversation {
+    pub fn open_new() -> Starter {
+        Starter::default()
+    }
+
     pub fn user(user: &str) -> Starter {
         Starter::default().add_user(user)
     }
@@ -38,12 +44,36 @@ impl Conversation {
     }
 
     pub async fn send_text(self, text: &str, token: &str) -> BoltResult<Self> {
-        Message::new()
+        self.as_message()?
             .text(text)
             .post(token)
             .await?;
 
         self.update(token).await
+    }
+
+    pub async fn send_blocks(self, blocks: Blocks, token: &str) -> BoltResult<Self> {
+        self.as_message()?
+            .blocks(blocks)
+            .post(token)
+            .await?;
+
+        self.update(token).await
+    }
+
+    pub async fn send_attachments(self, attachments: Elements, token: &str) -> BoltResult<Self> {
+        self.as_message()?
+            .attachments(attachments)
+            .post(token)
+            .await?;
+
+        self.update(token).await
+    }
+}
+
+impl AsMessage for Conversation {
+    fn as_message(&self) -> BoltResult<Message> {
+        Ok(Message::new().channel(&self.id))
     }
 }
 
