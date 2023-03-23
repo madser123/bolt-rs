@@ -1,6 +1,5 @@
 pub use crate::{
     core::{
-        Null,
         Build,
         Error, 
         BoltResult, 

@@ -53,16 +53,16 @@ impl Blocks {
         self.0.is_empty()
     }
 
-    pub fn push(&mut self, block: impl Block) -> BoltResult<Null> {
+    pub fn push(&mut self, block: impl Block) -> BoltResult<()> {
         self.0.push(block.build()?);
-        Ok(Null::Null)
+        Ok(())
     }
 
-    pub fn append(&mut self, blocks: Vec<impl Block>) -> BoltResult<Null> {
+    pub fn append(&mut self, blocks: Vec<impl Block>) -> BoltResult<()> {
         for b in blocks {
             self.push(b)?;
         }
-        Ok(Null::Null)
+        Ok(())
     }
 
     pub fn split_at(&self, mid: usize) -> (Blocks, Blocks) {

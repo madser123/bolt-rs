@@ -1,6 +1,6 @@
-use serde::de::DeserializeOwned;
-
 use super::*;
+use serde::de::DeserializeOwned;
+use reqwest::{Client, multipart::Form};
 
 pub struct Request(reqwest::RequestBuilder);
 
@@ -20,7 +20,7 @@ impl Request {
         self
     }
 
-    pub fn multipart(mut self, form: reqwest::multipart::Form) -> Self {
+    pub fn multipart(mut self, form: Form) -> Self {
         self.0 = self.0.multipart(form);
         self
     }

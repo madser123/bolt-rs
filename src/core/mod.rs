@@ -10,12 +10,7 @@ pub mod response;
 pub mod request;
 pub mod state;
 
-pub type Null = serde_json::Value;
 pub type BoltResult<T> = Result<T, Error>;
-
-pub trait BoltError {
-    fn error(&self, message: &str) -> Error;
-}
 
 #[derive(Debug)]
 pub enum Error {

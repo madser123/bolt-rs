@@ -20,9 +20,9 @@ pub trait SerializeDefaultPhantomData {
     }
 }
 
-pub fn parse_url(url: &str) -> BoltResult<Null> {
+pub fn parse_url(url: &str) -> BoltResult<()> {
     if let Err(error) = Url::parse(url) {
         return Err(Error::Parsing("url".to_string(), error.to_string()));
     }
-    Ok(Null::Null)
+    Ok(())
 }

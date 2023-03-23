@@ -78,16 +78,16 @@ impl Elements {
         Self::default()
     }
 
-    pub fn push(&mut self, element: &impl Element) -> BoltResult<Null> {
+    pub fn push(&mut self, element: &impl Element) -> BoltResult<()> {
         self.0.push(element.build()?);
-        Ok(Null::Null)
+        Ok(())
     }
 
-    pub fn append(&mut self, elements: &mut Vec<impl Element>) -> BoltResult<Null> {
+    pub fn append(&mut self, elements: &mut Vec<impl Element>) -> BoltResult<()> {
         for e in elements {
             self.push(e)?;
         }
-        Ok(Null::Null)
+        Ok(())
     }
 
     pub fn json(self) -> Vec<json::Value> {

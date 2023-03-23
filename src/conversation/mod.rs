@@ -1,4 +1,5 @@
 use crate::pre::*;
+use reqwest::multipart::Form;
 use message::Message;
 
 #[skip_serializing_none]
@@ -28,7 +29,7 @@ impl Conversation {
 
     pub async fn update(self, token: &str) -> BoltResult<Self> {
         Request::post("conversations.join", token)
-            .multipart(reqwest::multipart::Form::new()
+            .multipart(Form::new()
                 .text("channel", self.id)    
             )
             .send()

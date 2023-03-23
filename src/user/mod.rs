@@ -1,7 +1,7 @@
 use crate::pre::*;
 
 use std::collections::HashMap;
-use reqwest::multipart;
+use reqwest::multipart::Form;
 
 #[skip_serializing_none]
 #[derive(Deserialize, Serialize, Clone, Debug)]
@@ -76,13 +76,19 @@ impl UserList {
 }
 
 impl User {
-    pub async fn from_id(token: &str, id: &str) {
-        todo!()
+    pub async fn from_id(token: &str, id: &str) -> BoltResult<Self> {
+        Request::get("users.info", token)
+            .multipart(Form::new()
+                .text("user", id.to_string())
+            )
+            .send()
+            .await?
+            .unpack()
     }
 
     pub async fn from_email(token: &str, email: &str) -> BoltResult<Self> {
         Request::get("users.lookupByEmail", token)
-            .multipart(multipart::Form::new()
+            .multipart(Form::new()
                 .text("email", email.to_string()
             ))
             .send()
