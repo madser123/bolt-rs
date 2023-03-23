@@ -66,7 +66,7 @@ impl<T: DeserializeOwned + Serialize + parsing::SerializeDefaultPhantomData + De
         self
     }
 
-    pub async fn open(self, trigger_id: &str, token: &str) -> BoltResult<()> {
+    pub async fn open(self, trigger_id: &str, token: &str) -> BoltResult<Null> {
         Request::post("views.open", token)
             .json(&Controller::trigger(trigger_id, self))
             .send()
@@ -74,7 +74,7 @@ impl<T: DeserializeOwned + Serialize + parsing::SerializeDefaultPhantomData + De
             .unpack()
     }
 
-    pub async fn update(self, token: &str) -> BoltResult<()> {
+    pub async fn update(self, token: &str) -> BoltResult<Null> {
         Request::post("views.update", token)
             .json(&Controller::update(self))
             .send()

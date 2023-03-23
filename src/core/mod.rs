@@ -10,6 +10,7 @@ pub mod response;
 pub mod request;
 pub mod state;
 
+pub type Null = serde_json::Value;
 pub type BoltResult<T> = Result<T, Error>;
 
 pub trait BoltError {
