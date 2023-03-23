@@ -28,9 +28,9 @@ pub trait AsBlocks {
     fn as_blocks(&self) -> BoltResult<Blocks>;
 }
 
-pub trait AsBlock<T: Block> {
-    /// Turns `self` into a `Block` of type `T`
-    fn as_block(&self) -> BoltResult<T>;
+pub trait AsBlock<B: Block> {
+    /// Turns `self` into a `Block` of type `B`
+    fn as_block(&self) -> BoltResult<B>;
 }
 
 trait ModalBlock {}

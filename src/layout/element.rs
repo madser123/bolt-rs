@@ -38,9 +38,9 @@ pub trait AsElements {
     /// Turns `self` into a list of `Elements`
     fn as_elements(&self) -> BoltResult<Elements>;
 }
-pub trait AsElement {
+pub trait AsElement<E> {
     /// Turns `self` into an `Element` of type `T`
-    fn as_element<T: Element>(&self) -> BoltResult<T>;
+    fn as_element(&self) -> BoltResult<E>;
 }
 
 pub trait SectionElement: Element
