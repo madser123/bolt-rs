@@ -6,12 +6,12 @@ pub struct Request(reqwest::RequestBuilder);
 
 impl Request {
     pub fn post(endpoint: &str, token: &str) -> Self {
-        let client = reqwest::Client::new();
+        let client = Client::new();
         Self(client.post(format!("https://slack.com/api/{endpoint}")).bearer_auth(token))
     }
 
     pub fn get(endpoint: &str, token: &str) -> Self {
-        let client = reqwest::Client::new();
+        let client = Client::new();
         Self(client.get(format!("https://slack.com/api/{endpoint}")).bearer_auth(token))
     }
 
