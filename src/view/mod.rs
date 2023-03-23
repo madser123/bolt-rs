@@ -1,5 +1,5 @@
-use std::fmt::Debug;
 use crate::pre::*;
+use std::fmt::Debug;
 use comp::{Text, Plain};
 use serde::de::DeserializeOwned;
 
