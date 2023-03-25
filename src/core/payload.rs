@@ -1,7 +1,13 @@
 use super::*;
 use comp::{Text, Any};
+use serde::de::DeserializeOwned;
 use view::View;
 use user::Team;
+
+pub trait Interaction: DeserializeOwned {
+    // get identifier (e.g. callback id for shortcut)
+    fn identifier(&self) -> String;
+}
 
 // Types
 
@@ -62,6 +68,12 @@ pub struct BlockAction {
     pub hash: String,
     pub state: Option<state::State>,
 }
+impl Interaction for BlockAction {
+    fn identifier(&self) -> String {
+        self.trigger_id.clone()
+    }
+}
+
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct MessageAction {
@@ -88,6 +100,11 @@ pub struct MessageAction {
     // /// Each request sends the bots `verification token` for verification | Deprecated - Use signed secrets instead.
     // pub token: String,
 }
+impl Interaction for MessageAction {
+    fn identifier(&self) -> String {
+        self.callback_id.clone()
+    }
+}
 
 /// A payload sent from slack for app-shortcuts.
 #[derive(Deserialize, Serialize, Debug, Clone)]
@@ -112,6 +129,11 @@ pub struct Shortcut {
     /// The user who interacted.
     pub user: ResponseUser,
 }
+impl Interaction for Shortcut {
+    fn identifier(&self) -> String {
+        self.callback_id.clone()
+    }
+}
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct ResponseUser {
@@ -135,6 +157,12 @@ pub struct ViewSubmission {
 
     pub response_urls: Vec<ResponseUrl>,
 }
+impl Interaction for ViewSubmission {
+    fn identifier(&self) -> String {
+        todo!()
+    }
+}
+
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct ViewClosed {
@@ -143,4 +171,9 @@ pub struct ViewClosed {
     pub user: ResponseUser,
     pub view: View<ModalResponse>,
     pub is_cleared: bool,
+}
+impl Interaction for ViewClosed {
+    fn identifier(&self) -> String {
+        todo!()
+    }
 }
