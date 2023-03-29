@@ -2,13 +2,15 @@ use super::*;
 
 #[derive(Deserialize, Serialize, Debug, Clone, Default)]
 pub struct Response<V> {
+    ok: bool,
+
     #[serde(alias = "view")]
     #[serde(alias = "user")]
+    #[serde(alias = "profile")]
     #[serde(alias = "members")]
     #[serde(alias = "message")] 
     #[serde(alias = "channel")]
     value: Option<V>,
-    ok: bool,
 
     // Conversation specific
     no_op: Option<bool>,
@@ -19,9 +21,9 @@ pub struct Response<V> {
     ts: Option<String>,
 
     // Misc
-    cache_ts: Option<String>,
+    cache_ts: Option<i64>,
     error: Option<String>,
-    response_metadata: Option<HashMap<String, Vec<String>>>,
+    response_metadata: Option<json::Value>,
 }
 
 impl<V: serde::de::DeserializeOwned> Response<V> {
@@ -32,7 +34,7 @@ impl<V: serde::de::DeserializeOwned> Response<V> {
         // I think we could check the response for the user, before returning.
         // I just don't know how to construct the error yet. 
         // How do you access an enum variant through generics?
-        match resp.json::<Response<V>>().await {
+        match resp.json().await {
             Ok(t) => Ok(t),
             Err(error) => Err(Error::Response(std::any::type_name::<V>().to_string(), error.to_string())),
         }
@@ -58,8 +60,8 @@ impl<V> Response<V> {
             return Err(Error::Response(std::any::type_name::<V>().to_string(), self.format_error()))
         }
 
-        if let Some(message) = self.value() {
-            return Ok(message)
+        if let Some(value) = self.value() {
+            return Ok(value)
         }
 
         Err(Error::Response(std::any::type_name::<V>().to_string(), "Recieved an OK response and an empty value?!".to_string()))
