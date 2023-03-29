@@ -19,7 +19,7 @@ pub use crate::payload::{
 
 pub type AppResult<T> = Result<T, Error>;
 
-type Interactions<T: Interaction> = HashMap<String, Box<dyn Fn(T) -> BoxFuture<'static, AppResult<()>> + Send + Sync>>;
+type Interactions<T> = HashMap<String, Box<dyn Fn(T) -> BoxFuture<'static, AppResult<()>> + Send + Sync>>;
 
 pub struct App {
     address: SocketAddr,
