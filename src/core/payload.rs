@@ -18,7 +18,10 @@ pub struct Message {
     pub r#type: String,
     pub user: String,
     pub ts: String,
-    pub text: String,
+    pub text: Option<String>,
+    pub blocks: Option<block::Blocks>,
+    pub attachments: Option<element::Elements>,
+    pub channel: Option<String>,
 }
 
 #[skip_serializing_none]

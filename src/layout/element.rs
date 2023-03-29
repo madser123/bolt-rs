@@ -70,7 +70,7 @@ where
 }
 pub trait ContextElement: Element {}
 
-#[derive(Debug, Default, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct Elements(Vec<json::Value>);
 
 impl Elements {
