@@ -10,6 +10,8 @@ pub struct Response<V> {
     #[serde(alias = "members")]
     #[serde(alias = "message")] 
     #[serde(alias = "channel")]
+    #[serde(alias = "file")]
+    #[serde(alias = "files")]
     value: Option<V>,
 
     // Conversation specific
