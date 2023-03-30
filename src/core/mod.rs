@@ -1,8 +1,5 @@
 use crate::pre::*;
-use std::{
-    collections::HashMap,
-    fmt::{Display, Formatter},
-};
+use std::fmt::{Display, Formatter};
 
 pub mod payload;
 pub mod parsing;
