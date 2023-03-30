@@ -56,13 +56,13 @@ mod test {
     fn get_test_types() -> (TestUser, TestUser, TestList) {
         let user1 = TestUser {
             id: 420,
-            name: "Brugernavnmedæøå",
-            url: "https://minhjemmeside.dk",
+            name: "WeirdUsernameæøå",
+            url: "https://mywebpage.com",
         };
         let user2 = TestUser {
             id: 69,
             name: "XxX_UsEr_xXX",
-            url: "https://dinmor.dk",
+            url: "https://otherpage.com",
         };
         let list = TestList {
             name: "Userlist #1",
@@ -131,12 +131,12 @@ mod test {
                     },
                     {
                         "type": "mrkdwn",
-                        "text": "- Name: Brugernavnmedæøå",
+                        "text": "- Name: WeirdUsernameæøå",
                         "verbatim": false
                     },
                     {
                         "type": "mrkdwn",
-                        "text": "- Webpage: https://minhjemmeside.dk",
+                        "text": "- Webpage: https://mywebpage.com",
                         "verbatim": false
                     }
                 ]
@@ -165,7 +165,7 @@ mod test {
                     },
                     {
                         "type": "mrkdwn",
-                        "text": "- Webpage: https://dinmor.dk",
+                        "text": "- Webpage: https://otherpage.com",
                         "verbatim": false
                     }
                 ]
@@ -200,12 +200,12 @@ mod test {
                             },
                             {
                                 "type": "mrkdwn",
-                                "text": "- Name: Brugernavnmedæøå",
+                                "text": "- Name: WeirdUsernameæøå",
                                 "verbatim": false,
                             },
                             {
                                 "type": "mrkdwn",
-                                "text": "- Webpage: https://minhjemmeside.dk",
+                                "text": "- Webpage: https://mywebpage.com",
                                 "verbatim": false,
                             }
                         ]
@@ -225,7 +225,7 @@ mod test {
                             },
                             {
                                 "type": "mrkdwn",
-                                "text": "- Webpage: https://dinmor.dk",
+                                "text": "- Webpage: https://otherpage.com",
                                 "verbatim": false,
                             }
                         ]
@@ -234,5 +234,16 @@ mod test {
                 "text": "Test",
             })
         )
+    }
+
+    #[test]
+    fn block_ids() {
+        let mut blocks = Blocks::new();
+
+        blocks.push(block::Actions::new().id("Action1")).unwrap();
+        blocks.push(block::Divider::new()).unwrap();
+        blocks.push(block::Section::new().id("Section1")).unwrap();
+
+        assert_eq!(blocks.ids(), vec!["Action1".to_string(), "Section1".to_string()])
     }
 }

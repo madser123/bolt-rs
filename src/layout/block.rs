@@ -45,6 +45,21 @@ impl Blocks {
         Self::default()
     }
 
+    /// Gets a list of block-ID's (if present) from this block-collection.
+    /// If a block doesn't have an id, it simply won't be in the list.
+    /// Blocks returned from slack always has ID's. Only user created-blocks that
+    /// haven't been sent to slack might not have ID's.
+    pub fn ids(&self) -> Vec<String> {
+        let mut ids = Vec::new();
+        for b in &self.0 {
+            if let Some(id) = b.get("block_id") {
+                // Remove escaped `"` from string value and push to vec
+                ids.push(id.to_string().replace(['\\', '"'], ""));
+            }
+        }
+        ids
+    }
+
     pub fn len(&self) -> usize {
         self.0.len()
     }
