@@ -59,9 +59,9 @@ impl App {
         self
     }
 
-    async fn handle_interaction<T: Interaction>(closures: Arc<Interactions<T>>, interaction: T) {
+    async fn handle_interaction<T: Interaction>(closures: Arc<Interactions<T>>, interaction: T) -> AppResult<()> {
         let closure = closures.get(&interaction.identifier()).unwrap();
-        closure(interaction).await;
+        closure(interaction).await
     }
 
     pub async fn start(self) {
@@ -89,39 +89,41 @@ impl App {
                         Ok(i) => i,
                         Err(error) => return Err(Error::BlockAction(format!("Tried to parse JSON to struct: {error}")))
                     };
-                    Ok(Self::handle_interaction(block_actions, interaction).await)
+                    Self::handle_interaction(block_actions, interaction).await?;
                 },
                 "message_action" => {
                     let interaction = match json::from_str::<MessageAction>(&body) {
                         Ok(i) => i,
                         Err(error) => return Err(Error::MessageAction(format!("Tried to parse JSON to struct: {error}")))
                     };
-                    Ok(Self::handle_interaction(message_actions, interaction).await)
+                    Self::handle_interaction(message_actions, interaction).await?;
                 },
                 "shortcut" => {
                     let interaction = match json::from_str::<Shortcut>(&body) {
                         Ok(i) => i,
                         Err(error) => return Err(Error::Shortcut(format!("Tried to parse JSON to struct: {error}")))
                     };
-                    Ok(Self::handle_interaction(shortcuts, interaction).await)
+                    Self::handle_interaction(shortcuts, interaction).await?;
                 },
                 "view_closed" => {
                     let interaction = match json::from_str::<ViewClosed>(&body) {
                         Ok(i) => i,
                         Err(error) => return Err(Error::ViewClosed(format!("Tried to parse JSON to struct: {error}")))
                     };
-                    Ok(Self::handle_interaction(view_closes, interaction).await)
+                    Self::handle_interaction(view_closes, interaction).await?;
                 },
                 "view_submission" => {
                     let interaction = match json::from_str::<ViewSubmission>(&body) {
                         Ok(i) => i,
                         Err(error) => return Err(Error::ViewSubmission(format!("Tried to parse JSON to struct: {error}")))
                     };
-                    Ok(Self::handle_interaction(view_submissions, interaction).await)
-                }
+                    Self::handle_interaction(view_submissions, interaction).await?;
+                },
 
-                t => Err(Error::Parsing(format!("'{t}' is not a known interaction type!")))
-            }
+                t => return Err(Error::Parsing(format!("'{t}' is not a known interaction type!"))),
+            };
+
+            Ok(())
         };
 
         let router = axum::Router::new()
@@ -137,47 +139,63 @@ impl App {
             .unwrap();
     }
 
-    pub fn block_actions<F, Fut>(mut self, identifier: &str, fun: F) -> Self
+    pub fn block_actions<F, Fut>(mut self, action_id: &str, cb: F) -> Self
     where
-        Fut: Future<Output = ()> + Send + 'static,
+        Fut: Future<Output = AppResult<()>> + Send + 'static,
         F: Fn(BlockAction) -> Fut + Send + Sync + 'static,
     {
-        todo!()
+        self.block_actions.insert(
+            action_id.to_string(),
+            Box::new(move |interaction| Box::pin(cb(interaction))),
+        );
+        self
     }
 
-    pub fn message_actions<F, Fut>(mut self, callback_id: &str, fun: F) -> Self
+    pub fn message_actions<F, Fut>(mut self, callback_id: &str, cb: F) -> Self
     where
-        Fut: Future<Output = ()> + Send + 'static,
+        Fut: Future<Output = AppResult<()>> + Send + 'static,
         F: Fn(MessageAction) -> Fut + Send + Sync + 'static,
     {
-        todo!()
+        self.message_actions.insert(
+            callback_id.to_string(),
+            Box::new(move |interaction| Box::pin(cb(interaction))),
+        );
+        self
     }
 
-    pub fn shortcut<F, Fut>(mut self, callback_id: &str, fun: F) -> Self
+    pub fn shortcut<F, Fut>(mut self, callback_id: &str, cb: F) -> Self
     where
         Fut: Future<Output = AppResult<()>> + Send + 'static,
         F: Fn(Shortcut) -> Fut + Send + Sync + 'static,
     {
         self.shortcuts.insert(
             callback_id.to_string(),
-            Box::new(move |interaction| Box::pin(fun(interaction))),
+            Box::new(move |interaction| Box::pin(cb(interaction))),
         );
         self
     }
 
-    pub fn view_close<F, Fut>(mut self, identifier: &str, fun: F) -> Self
+    pub fn view_close<F, Fut>(mut self, callback_id: &str, cb: F) -> Self
     where
-        Fut: Future<Output = ()> + Send + 'static,
+        Fut: Future<Output = AppResult<()>> + Send + 'static,
         F: Fn(ViewClosed) -> Fut + Send + Sync + 'static,
     {
-        todo!()
+        self.view_closes.insert(
+            callback_id.to_string(),
+            Box::new(move |interaction| Box::pin(cb(interaction))),
+        );
+        self
     }
 
-    pub fn view_submission<F, Fut>(mut self, identifier: &str, fun: F) -> Self
+    pub fn view_submission<F, Fut>(mut self, callback_id: &str, cb: F) -> Self
     where
-        Fut: Future<Output = ()> + Send + 'static,
+        Fut: Future<Output = AppResult<()>> + Send + 'static,
         F: Fn(ViewSubmission) -> Fut + Send + Sync + 'static,
     {
-        todo!()
+        self.view_submissions.insert(
+            callback_id.to_string(),
+            Box::new(move |interaction| Box::pin(cb(interaction))),
+        );
+        self
     }
 }
