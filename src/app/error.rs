@@ -17,7 +17,8 @@ pub enum Error {
 
 impl IntoResponse for Error {
     fn into_response(self) -> axum::response::Response {
-        (StatusCode::INTERNAL_SERVER_ERROR, self.to_string()).into_response()
+        println!("{self}");
+        (StatusCode::INTERNAL_SERVER_ERROR, "An error occurred.").into_response()
     }
 }
 
