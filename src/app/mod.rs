@@ -1,15 +1,15 @@
 use std::{collections::HashMap, net::SocketAddr, sync::Arc};
 use futures::{future::BoxFuture, Future};
+use serde::de::DeserializeOwned;
 use serde_json as json;
 
 mod auth;
 mod error;
 
-use error::Error;
+pub(crate) use error::Error;
 
 pub use auth::Auth;
 pub use crate::payload::{
-    Interaction,
     BlockAction,
     MessageAction,
     Shortcut,
@@ -20,6 +20,11 @@ pub use crate::payload::{
 pub type AppResult<T> = Result<T, Error>;
 
 type Interactions<T> = HashMap<String, Box<dyn Fn(T) -> BoxFuture<'static, AppResult<()>> + Send + Sync>>;
+
+pub trait Interaction: DeserializeOwned {
+    fn identifier(&self) -> String;
+    fn error(message: String) -> crate::app::Error; 
+}
 
 pub struct App {
     address: SocketAddr,
@@ -59,9 +64,21 @@ impl App {
         self
     }
 
-    async fn handle_interaction<T: Interaction>(closures: Arc<Interactions<T>>, interaction: T) -> AppResult<()> {
+    async fn handle_interaction<T: Interaction>(closures: Arc<Interactions<T>>, interaction: String) -> AppResult<()> {
+        let interaction = match json::from_str::<T>(&interaction) {
+            Ok(i) => i,
+            Err(error) => return Err(T::error(format!("Tried to parse JSON to struct: {error}")))
+        };
         let closure = closures.get(&interaction.identifier()).unwrap();
         closure(interaction).await
+    }
+
+    fn log(message: &str) {
+        println!("[INFO][App] {message}");
+    }
+
+    fn warn(message: &str) {
+        println!("[WARNING][App] {message}");
     }
 
     pub async fn start(self) {
@@ -71,54 +88,24 @@ impl App {
         let view_closes = Arc::new(self.view_closes);
         let view_submissions = Arc::new(self.view_submissions);
         let interaction_handler = move | body: String | async move {
-            // Start by printing info-message
-            println!("[INFO][Interaction] Recieved new interaction!");
-
             // Parse json
-            let json = json::to_value(&body)?;
-            
+            let json: json::Map<String, json::Value> = json::from_str(&body)?;
+
+            // Get type
             let r#type = match json.get("type") {
-                Some(t) => t.to_string(),
+                Some(t) => t.to_string().replace('"', ""),
                 None => return Err(Error::Parsing("Received new interaction without a type!".to_string())),
             };
-
+            
+            Self::log(&format!("Recieved a '{type}' interaction"));
             
             match r#type.as_str() {
-                "block_actions" | "interactive_message" => {
-                    let interaction = match json::from_str::<BlockAction>(&body) {
-                        Ok(i) => i,
-                        Err(error) => return Err(Error::BlockAction(format!("Tried to parse JSON to struct: {error}")))
-                    };
-                    Self::handle_interaction(block_actions, interaction).await?;
-                },
-                "message_action" => {
-                    let interaction = match json::from_str::<MessageAction>(&body) {
-                        Ok(i) => i,
-                        Err(error) => return Err(Error::MessageAction(format!("Tried to parse JSON to struct: {error}")))
-                    };
-                    Self::handle_interaction(message_actions, interaction).await?;
-                },
-                "shortcut" => {
-                    let interaction = match json::from_str::<Shortcut>(&body) {
-                        Ok(i) => i,
-                        Err(error) => return Err(Error::Shortcut(format!("Tried to parse JSON to struct: {error}")))
-                    };
-                    Self::handle_interaction(shortcuts, interaction).await?;
-                },
-                "view_closed" => {
-                    let interaction = match json::from_str::<ViewClosed>(&body) {
-                        Ok(i) => i,
-                        Err(error) => return Err(Error::ViewClosed(format!("Tried to parse JSON to struct: {error}")))
-                    };
-                    Self::handle_interaction(view_closes, interaction).await?;
-                },
-                "view_submission" => {
-                    let interaction = match json::from_str::<ViewSubmission>(&body) {
-                        Ok(i) => i,
-                        Err(error) => return Err(Error::ViewSubmission(format!("Tried to parse JSON to struct: {error}")))
-                    };
-                    Self::handle_interaction(view_submissions, interaction).await?;
-                },
+                "block_actions" 
+                | "interactive_message" => Self::handle_interaction(block_actions, body).await?,
+                "message_action"        => Self::handle_interaction(message_actions, body).await?,
+                "shortcut"              => Self::handle_interaction(shortcuts, body).await?,
+                "view_closed"           => Self::handle_interaction(view_closes, body).await?,
+                "view_submission"       => Self::handle_interaction(view_submissions, body).await?,
 
                 t => return Err(Error::Parsing(format!("'{t}' is not a known interaction type!"))),
             };
@@ -132,6 +119,8 @@ impl App {
         let server = axum::Server::bind(&self.address);
 
         // Middleware
+
+        Self::log(&format!("Started server - Serving on {}", self.address));
 
         server
             .serve(router.into_make_service())

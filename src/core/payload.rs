@@ -1,13 +1,8 @@
 use super::*;
 use comp::{Text, Any};
-use serde::de::DeserializeOwned;
 use view::View;
 use user::Team;
-
-pub trait Interaction: DeserializeOwned {
-    // get identifier (e.g. callback id for shortcut)
-    fn identifier(&self) -> String;
-}
+use crate::app::{Interaction, Error as AppError};
 
 // Types
 
@@ -72,6 +67,10 @@ impl Interaction for BlockAction {
     fn identifier(&self) -> String {
         self.trigger_id.clone()
     }
+
+    fn error(message: String) -> crate::app::Error {
+        AppError::BlockAction(message)
+    }
 }
 
 
@@ -104,6 +103,10 @@ impl Interaction for MessageAction {
     fn identifier(&self) -> String {
         self.callback_id.clone()
     }
+
+    fn error(message: String) -> crate::app::Error {
+        AppError::MessageAction(message)
+    }
 }
 
 /// A payload sent from slack for app-shortcuts.
@@ -133,6 +136,10 @@ impl Interaction for Shortcut {
     fn identifier(&self) -> String {
         self.callback_id.clone()
     }
+
+    fn error(message: String) -> crate::app::Error {
+        AppError::Shortcut(message)
+    }
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
@@ -161,6 +168,10 @@ impl Interaction for ViewSubmission {
     fn identifier(&self) -> String {
         todo!()
     }
+
+    fn error(message: String) -> crate::app::Error {
+        AppError::ViewSubmission(message)
+    }
 }
 
 
@@ -175,5 +186,9 @@ pub struct ViewClosed {
 impl Interaction for ViewClosed {
     fn identifier(&self) -> String {
         todo!()
+    }
+
+    fn error(message: String) -> crate::app::Error {
+        AppError::ViewClosed(message)
     }
 }
