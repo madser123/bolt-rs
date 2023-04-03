@@ -14,6 +14,16 @@ pub struct Auth {
     signing_secret: String,
 }
 
+impl Logger for Auth {
+    fn log(message: &str) {
+        println!("[INFO][Authentication] {message}");
+    }
+
+    fn warn(message: &str) {
+        println!("[WARNING][Authentication] {message}");
+    }
+}
+
 impl Auth {
     pub fn new(signing_secret: String, bot_token: Option<String>, user_token: Option<String>) -> Self {
         Self {
@@ -35,7 +45,21 @@ impl Auth {
         self.signing_secret.clone()
     }
 
+    pub fn run_pre_startup_checks(&self) {
+        if self.signing_secret.is_empty() {
+            panic!("Signing secret is empty! If you instantiated your Auth using `Auth::default()` you need to use `Auth::new(signing_secret, Option<bot_token>, Option<user_token>)` instead.")
+        }
+        if self.bot_token.is_none() {
+            Self::warn("No Bot-Token supplied. Some features won't be available or be limited.")
+        }
+        if self.user_token.is_none() {
+            Self::warn("No User-Token supplied. Some features won't be available or be limited.")
+        }
+    }
+
     pub fn sanitize_payload(&self, payload: &String, headers: HeaderMap) -> AppResult<String> {
+        Self::log("Sanitizing new payload.");
+
         // Get headers
         let slack_ts_header = match headers.get("X-Slack-Request-Timestamp") {
             Some(ts) => ts,
@@ -81,11 +105,12 @@ impl Auth {
             return Err(Error::Authentication("Signatures didn't match".to_string()))
         };
 
+        Self::log("OK");
+
         // Decode payload
         match urlencoding::decode(&payload.replace('+', " ")) {
             Ok(decoded) => Ok(decoded.into_owned().replace("payload=", "")),
             Err(error) => Err(Error::Parsing(format!("Couldn't parse payload body: {error}"))),
         }
-
     }
 }

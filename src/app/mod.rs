@@ -28,6 +28,11 @@ pub trait Interaction: DeserializeOwned {
     fn error(message: String) -> crate::app::Error; 
 }
 
+pub trait Logger {
+    fn log(message: &str);
+    fn warn(message: &str);
+}
+
 pub struct App {
     address: SocketAddr,
     auth: Auth,
@@ -50,6 +55,16 @@ impl Default for App {
             view_closes: HashMap::new(),
             view_submissions: HashMap::new(),
         }
+    }
+}
+
+impl Logger for App {
+    fn log(message: &str) {
+        println!("[INFO][App] {message}");
+    }
+
+    fn warn(message: &str) {
+        println!("[WARNING][App] {message}");
     }
 }
 
@@ -83,15 +98,10 @@ impl App {
         }
     }
 
-    fn log(message: &str) {
-        println!("[INFO][App] {message}");
-    }
-
-    fn warn(message: &str) {
-        println!("[WARNING][App] {message}");
-    }
-
     pub async fn start(self) {
+        // Check for warnings
+        self.run_pre_startup_checks();
+
         // Closure bindings
         let block_actions = Arc::new(self.block_actions);
         let message_actions = Arc::new(self.message_actions);
@@ -101,7 +111,7 @@ impl App {
 
         // HANDLER: Interactions
         let interaction_handler = move | headers: HeaderMap, body: String | async move {
-            
+            // Sanitize payload
             let payload = self.auth.sanitize_payload(&body, headers)?;
             
             // Parse json
@@ -115,7 +125,7 @@ impl App {
             
             Self::log(&format!("Recieved a new '{type}' interaction"));
 
-            
+            // Match type of interaction to handle
             match r#type.as_str() {
                 "block_actions" 
                 | "interactive_message" => Self::handle_interaction(block_actions, payload).await?,
@@ -137,8 +147,6 @@ impl App {
         // Create server
         let server = axum::Server::bind(&self.address);
 
-        // Middleware ???
-
         Self::log(&format!("Starting server - Serving on {}", self.address));
 
         // Run server
@@ -146,6 +154,10 @@ impl App {
             .serve(router.into_make_service())
             .await
             .unwrap();
+    }
+
+    fn run_pre_startup_checks(&self) {
+        self.auth.run_pre_startup_checks();
     }
 
     pub fn block_actions<F, Fut>(mut self, action_id: &str, cb: F) -> Self

@@ -1,6 +1,6 @@
 [package]
 name = "bolt-rs"
-version = "0.1.0"
+version = "0.3.0"
 edition = "2021"
 
 [features]
@@ -10,27 +10,28 @@ default = ["client"]
 client  = [
     "dep:axum", 
     "dep:chrono", 
-    "dep:urlencoding", 
     "dep:hex", 
-    "dep:hmac-sha256"
+    "dep:hmac-sha256",
+    "dep:urlencoding", 
 ]
 
 [dependencies]
 # Normal dependencies
-serde_with  = { version = "2.0.1"   }
-serde       = { version = "1.0.145" }
-serde_json  = { version = "1.0.85"  }
-url         = { version = "2.3.1"   }
 futures     = { version = "0.3.27"  }
 reqwest     = { version = "0.11.0", features = ["json", "multipart"] }
+serde       = { version = "1.0.145" }
+serde_json  = { version = "1.0.85"  }
+serde_with  = { version = "2.0.1"   }
+url         = { version = "2.3.1"   }
 
 # Client dependencies
-chrono      = { version = "0.4.24", optional = true }
-hmac-sha256 = { version = "1.1.6",  optional = true }
-hex         = { version = "0.4.3",  optional = true }
-urlencoding = { version = "2.1.2",  optional = true }
 axum        = { version = "0.6.12", optional = true }
+chrono      = { version = "0.4.24", optional = true }
+hex         = { version = "0.4.3",  optional = true }
+hmac-sha256 = { version = "1.1.6",  optional = true }
+urlencoding = { version = "2.1.2",  optional = true }
 
+# Development / Testing dependencies
 [dev-dependencies]
 dotenv  = { version = "0.15.0" }
 tokio   = { version = "1.26.0", features = ["test-util", "macros"] }
