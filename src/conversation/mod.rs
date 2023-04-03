@@ -1,4 +1,8 @@
 use crate::pre::*;
+use reqwest::multipart::Form;
+use message::{Message, AsMessage};
+use block::Blocks;
+use element::Elements;
 
 #[skip_serializing_none]
 #[derive(Deserialize, Serialize, Debug)]
@@ -17,12 +21,59 @@ pub struct Conversation {
 }
 
 impl Conversation {
-    pub fn start_new() -> Starter {
+    pub fn open_new() -> Starter {
         Starter::default()
     }
 
-    pub fn send(self) -> BoltResult<Conversation> {
-        todo!()
+    pub fn user(user: &str) -> Starter {
+        Starter::default().add_user(user)
+    }
+
+    pub fn channel(channel: &str) -> Starter {
+        Starter::default().channel(channel)
+    }
+
+    pub async fn update(self, token: &str) -> BoltResult<Self> {
+        Request::post("conversations.join", token)
+            .multipart(Form::new()
+                .text("channel", self.id)    
+            )
+            .send()
+            .await?
+            .unpack()
+    }
+
+    pub async fn send_text(self, text: &str, token: &str) -> BoltResult<Self> {
+        self.as_message()?
+            .text(text)
+            .post(token)
+            .await?;
+
+        self.update(token).await
+    }
+
+    pub async fn send_blocks(self, blocks: Blocks, token: &str) -> BoltResult<Self> {
+        self.as_message()?
+            .blocks(blocks)
+            .post(token)
+            .await?;
+
+        self.update(token).await
+    }
+
+    pub async fn send_attachments(self, attachments: Elements, token: &str) -> BoltResult<Self> {
+        self.as_message()?
+            .attachments(attachments)
+            .post(token)
+            .await?;
+
+        self.update(token).await
+    }
+}
+
+impl AsMessage for Conversation {
+    fn as_message(&self) -> BoltResult<Message> {
+        Ok(Message::new().channel(&self.id))
     }
 }
 
@@ -44,12 +95,12 @@ impl Starter {
             .unpack()
     }
 
-    pub fn add_user(mut self, user: &str) -> Self {
+    fn add_user(mut self, user: &str) -> Self {
         self.users.push(user.to_string());
         self
     }
 
-    pub fn channel(mut self, channel: &str) -> Self {
+    fn channel(mut self, channel: &str) -> Self {
         self.channel = Some(channel.to_string());
         self
     }

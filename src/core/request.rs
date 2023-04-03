@@ -1,17 +1,17 @@
-use serde::de::DeserializeOwned;
-
 use super::*;
+use serde::de::DeserializeOwned;
+use reqwest::{Client, multipart::Form};
 
 pub struct Request(reqwest::RequestBuilder);
 
 impl Request {
     pub fn post(endpoint: &str, token: &str) -> Self {
-        let client = reqwest::Client::new();
+        let client = Client::new();
         Self(client.post(format!("https://slack.com/api/{endpoint}")).bearer_auth(token))
     }
 
     pub fn get(endpoint: &str, token: &str) -> Self {
-        let client = reqwest::Client::new();
+        let client = Client::new();
         Self(client.get(format!("https://slack.com/api/{endpoint}")).bearer_auth(token))
     }
 
@@ -20,7 +20,7 @@ impl Request {
         self
     }
 
-    pub fn multipart(mut self, form: reqwest::multipart::Form) -> Self {
+    pub fn multipart(mut self, form: Form) -> Self {
         self.0 = self.0.multipart(form);
         self
     }

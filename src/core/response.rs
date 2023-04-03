@@ -1,43 +1,63 @@
 use super::*;
+use json::Map;
 
 #[derive(Deserialize, Serialize, Debug, Clone, Default)]
 pub struct Response<V> {
+    ok: bool,
+
     #[serde(alias = "view")]
     #[serde(alias = "user")]
+    #[serde(alias = "profile")]
     #[serde(alias = "members")]
     #[serde(alias = "message")] 
+    #[serde(alias = "file")]
+    #[serde(alias = "files")]
     #[serde(alias = "channel")]
     value: Option<V>,
-    ok: bool,
 
     // Conversation specific
     no_op: Option<bool>,
     already_open: Option<bool>,
 
-    // Message specific
-    channel_id: Option<String>,
-    ts: Option<String>,
-
     // Misc
-    cache_ts: Option<String>,
+    ts: Option<String>,
+    cache_ts: Option<i64>,
     error: Option<String>,
-    response_metadata: Option<HashMap<String, Vec<String>>>,
+    response_metadata: Option<json::Value>,
 }
 
 impl<V: serde::de::DeserializeOwned> Response<V> {
     pub async fn from_json(
         resp: reqwest::Response,
     ) -> BoltResult<Self> {
-        // This implementation should be rewritten
+        // Stupid fix for channel reappearing in `Response<Message>` with a String value, instead of a struct
+        // as it is in `Response<Conversation>`. Here we just remove the key from the root-json, put it into the "message" object 
+        // and then deserialize it into the struct.
+        // TODO: REWRITE!!!!!!! Find another solution to this - There has to be an easier way.
+        let mut map: Map<String, json::Value> = json::from_str(&resp.text().await.unwrap()).unwrap();
+        if let Some(c) = map.get("channel") {
+            let channel: json::Value;
+            if c.is_string() {
+                channel = map.remove("channel").unwrap();
+                if let Some(m) = map.get_mut("message") {
+                    if let Some(message) = m.as_object_mut() {
+                        message.insert("channel".to_string(), channel);
+                    }
+                }
+            }
+        }
+        // This implementation may be rewritten
         // I think we could check the response for the user, before returning.
         // I just don't know how to construct the error yet. 
         // How do you access an enum variant through generics?
-        match resp.json::<Response<V>>().await {
+        match json::from_value(json::Value::from(map)) {
             Ok(t) => Ok(t),
             Err(error) => Err(Error::Response(std::any::type_name::<V>().to_string(), error.to_string())),
         }
     }
 }
+
+
 
 impl<V> Response<V> {
     pub fn is_ok(&self) -> bool {
@@ -58,8 +78,8 @@ impl<V> Response<V> {
             return Err(Error::Response(std::any::type_name::<V>().to_string(), self.format_error()))
         }
 
-        if let Some(message) = self.value() {
-            return Ok(message)
+        if let Some(value) = self.value() {
+            return Ok(value)
         }
 
         Err(Error::Response(std::any::type_name::<V>().to_string(), "Recieved an OK response and an empty value?!".to_string()))

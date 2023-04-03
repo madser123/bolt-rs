@@ -28,9 +28,9 @@ pub trait AsBlocks {
     fn as_blocks(&self) -> BoltResult<Blocks>;
 }
 
-pub trait AsBlock<T: Block> {
-    /// Turns `self` into a `Block` of type `T`
-    fn as_block(&self) -> BoltResult<T>;
+pub trait AsBlock<B: Block> {
+    /// Turns `self` into a `Block` of type `B`
+    fn as_block(&self) -> BoltResult<B>;
 }
 
 trait ModalBlock {}
@@ -43,6 +43,21 @@ pub struct Blocks(Vec<json::Value>);
 impl Blocks {
     pub fn new() -> Self {
         Self::default()
+    }
+
+    /// Gets a list of block-ID's (if present) from this block-collection.
+    /// If a block doesn't have an id, it simply won't be in the list.
+    /// Blocks returned from slack always has ID's. Only user created-blocks that
+    /// haven't been sent to slack might not have ID's.
+    pub fn ids(&self) -> Vec<String> {
+        let mut ids = Vec::new();
+        for b in &self.0 {
+            if let Some(id) = b.get("block_id") {
+                // Remove escaped `"` from string value and push to vec
+                ids.push(id.to_string().replace(['\\', '"'], ""));
+            }
+        }
+        ids
     }
 
     pub fn len(&self) -> usize {

@@ -1,7 +1,7 @@
 pub use crate::{
     core::{
         Build,
-        Error, 
+        Error,
         BoltResult, 
         response::Response,
         request::Request,

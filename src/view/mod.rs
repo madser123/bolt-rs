@@ -1,5 +1,5 @@
-use std::fmt::Debug;
 use crate::pre::*;
+use std::fmt::Debug;
 use comp::{Text, Plain};
 use serde::de::DeserializeOwned;
 
@@ -66,7 +66,7 @@ impl<T: DeserializeOwned + Serialize + parsing::SerializeDefaultPhantomData + De
         self
     }
 
-    pub async fn open(self, trigger_id: &str, token: &str) -> BoltResult<()> {
+    pub async fn open(self, trigger_id: &str, token: &str) -> BoltResult<Self> {
         Request::post("views.open", token)
             .json(&Controller::trigger(trigger_id, self))
             .send()
@@ -74,7 +74,7 @@ impl<T: DeserializeOwned + Serialize + parsing::SerializeDefaultPhantomData + De
             .unpack()
     }
 
-    pub async fn update(self, token: &str) -> BoltResult<()> {
+    pub async fn update(self, token: &str) -> BoltResult<Self> {
         Request::post("views.update", token)
             .json(&Controller::update(self))
             .send()
@@ -114,7 +114,6 @@ impl<T: parsing::SerializeDefaultPhantomData> Build for View<T> {
         self.r#type.clone()
     }
 }
-
 impl View<ModalResponse> {
     pub fn get_callback_id(&self) -> &str {
         self.callback_id.as_ref().unwrap()
@@ -125,23 +124,13 @@ impl View<ModalResponse> {
     }
 
     pub fn get_state_value(&self, block_id: &str, action_id: &str) -> BoltResult<String> {
-        if self.state.is_none() {
-            return Err(Error::View(format!("Couldn't get state-value block: '{block_id}' action: '{action_id}'. No state found.")));
-        }
-
-        let block = match self.state.as_ref().unwrap().values.get(block_id) {
-            Some(b) => b,
-            None => {
-                return Err(Error::View(format!("Couldn't get state value of block: '{block_id}'")))
-            }
-        };
-
-        if let Some(value) = block.get(action_id) {
-            if let Some(v) = &value.value {
-                return Ok(v.to_owned());
+        if let Some(s) = &self.state {
+            return match s.get_value(block_id, action_id) {
+                Ok(v) => Ok(v.to_string()),
+                Err(error) => Err(Error::View(error))
             }
         }
 
-        Err(Error::View(format!("Couldn't get state value of block: '{block_id}' action: '{action_id}'")))
+        Err(Error::View("Tried to get state from view without state.".to_string()))
     }
 }
