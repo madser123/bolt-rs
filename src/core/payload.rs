@@ -68,6 +68,10 @@ impl Interaction for BlockAction {
         self.trigger_id.clone()
     }
 
+    fn identifier_name() -> String {
+        "trigger_id".to_string()
+    }
+
     fn error(message: String) -> crate::app::Error {
         AppError::BlockAction(message)
     }
@@ -104,6 +108,10 @@ impl Interaction for MessageAction {
         self.callback_id.clone()
     }
 
+    fn identifier_name() -> String {
+        "callback_id".to_string()
+    }
+
     fn error(message: String) -> crate::app::Error {
         AppError::MessageAction(message)
     }
@@ -135,6 +143,10 @@ pub struct Shortcut {
 impl Interaction for Shortcut {
     fn identifier(&self) -> String {
         self.callback_id.clone()
+    }
+
+    fn identifier_name() -> String {
+        "callback_id".to_string()
     }
 
     fn error(message: String) -> crate::app::Error {
@@ -169,6 +181,10 @@ impl Interaction for ViewSubmission {
         todo!()
     }
 
+    fn identifier_name() -> String {
+        todo!()
+    }
+
     fn error(message: String) -> crate::app::Error {
         AppError::ViewSubmission(message)
     }
@@ -185,6 +201,10 @@ pub struct ViewClosed {
 }
 impl Interaction for ViewClosed {
     fn identifier(&self) -> String {
+        todo!()
+    }
+
+    fn identifier_name() -> String {
         todo!()
     }
 

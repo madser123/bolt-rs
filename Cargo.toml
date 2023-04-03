@@ -4,24 +4,33 @@ version = "0.1.0"
 edition = "2021"
 
 [features]
+full    = ["client"]
 default = ["client"]
-client = ["dep:axum"]
-validator = []
+
+client  = [
+    "dep:axum", 
+    "dep:chrono", 
+    "dep:urlencoding", 
+    "dep:hex", 
+    "dep:hmac-sha256"
+]
 
 [dependencies]
-serde_with = "2.0.1"
-serde = "1.0.145"
-serde_json = "1.0.85"
-url = "2.3.1"
-futures = "0.3.27"
+# Normal dependencies
+serde_with  = { version = "2.0.1"   }
+serde       = { version = "1.0.145" }
+serde_json  = { version = "1.0.85"  }
+url         = { version = "2.3.1"   }
+futures     = { version = "0.3.27"  }
+reqwest     = { version = "0.11.0", features = ["json", "multipart"] }
 
-[dependencies.axum]
-version = "0.6.12"
-optional = true
-
-[dependencies.reqwest]
-version = "0.11.0"
-features = ["json", "multipart"]
+# Client dependencies
+chrono      = { version = "0.4.24", optional = true }
+hmac-sha256 = { version = "1.1.6",  optional = true }
+hex         = { version = "0.4.3",  optional = true }
+urlencoding = { version = "2.1.2",  optional = true }
+axum        = { version = "0.6.12", optional = true }
 
 [dev-dependencies]
-tokio = { version = "1.26.0", features = ["test-util", "macros"] }
+dotenv  = { version = "0.15.0" }
+tokio   = { version = "1.26.0", features = ["test-util", "macros"] }

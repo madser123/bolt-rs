@@ -7,6 +7,7 @@ use axum::{
 
 pub enum Error {
     Parsing(String),
+    Authentication(String),
 
     BlockAction(String),
     MessageAction(String),
@@ -27,6 +28,9 @@ impl Display for Error {
         match self {
             Self::Parsing(error) => {
                 write!(f, "[ERROR][Parsing] {error}")
+            },
+            Self::Authentication(error) => {
+                write!(f, "[ERROR][Authentication] {error}")
             },
             Self::BlockAction(error) => {
                 write!(f, "[ERROR][BlockAction] {error}")
