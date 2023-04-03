@@ -2,9 +2,9 @@ name: Rust
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "feature__app_client" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "feature__app_client" ]
 
 env:
   CARGO_TERM_COLOR: always
@@ -20,6 +20,11 @@ jobs:
       run: cargo build --verbose
     - name: Run tests
       env: 
+        APP_ID: ${{ secrets.TEST_WORKSPACE_APP_ID }}
         BOT_TOKEN: ${{ secrets.TEST_WORKSPACE_BOT_TOKEN }}
+        CLIENT_ID: ${{ secrets.TEST_WORKSPACE_CLIENT_ID }}
+        CLIENT_SECRET: ${{ secrets.TEST_WORKSPACE_CLIENT_SECRET }}
+        SIGNING_SECRET: ${{ secrets.TEST_WORKSPACE_SIGNING_SECRET }}
         USER_TOKEN: ${{ secrets.TEST_WORKSPACE_USER_TOKEN }}
+        VERIFICATION_TOKEN: ${{ secrets.TEST_WORKSPACE_VERIFICATION_TOKEN }}
       run: cargo test --verbose

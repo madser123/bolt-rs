@@ -2,6 +2,7 @@ use super::*;
 use comp::{Text, Any};
 use view::View;
 use user::Team;
+use crate::app::{Interaction, Error as AppError};
 
 // Types
 
@@ -65,6 +66,20 @@ pub struct BlockAction {
     pub hash: String,
     pub state: Option<state::State>,
 }
+impl Interaction for BlockAction {
+    fn identifier(&self) -> String {
+        self.trigger_id.clone()
+    }
+
+    fn identifier_name() -> String {
+        "trigger_id".to_string()
+    }
+
+    fn error(message: String) -> crate::app::Error {
+        AppError::BlockAction(message)
+    }
+}
+
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct MessageAction {
@@ -91,6 +106,19 @@ pub struct MessageAction {
     // /// Each request sends the bots `verification token` for verification | Deprecated - Use signed secrets instead.
     // pub token: String,
 }
+impl Interaction for MessageAction {
+    fn identifier(&self) -> String {
+        self.callback_id.clone()
+    }
+
+    fn identifier_name() -> String {
+        "callback_id".to_string()
+    }
+
+    fn error(message: String) -> crate::app::Error {
+        AppError::MessageAction(message)
+    }
+}
 
 /// A payload sent from slack for app-shortcuts.
 #[derive(Deserialize, Serialize, Debug, Clone)]
@@ -115,6 +143,19 @@ pub struct Shortcut {
     /// The user who interacted.
     pub user: ResponseUser,
 }
+impl Interaction for Shortcut {
+    fn identifier(&self) -> String {
+        self.callback_id.clone()
+    }
+
+    fn identifier_name() -> String {
+        "callback_id".to_string()
+    }
+
+    fn error(message: String) -> crate::app::Error {
+        AppError::Shortcut(message)
+    }
+}
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct ResponseUser {
@@ -138,6 +179,20 @@ pub struct ViewSubmission {
 
     pub response_urls: Vec<ResponseUrl>,
 }
+impl Interaction for ViewSubmission {
+    fn identifier(&self) -> String {
+        todo!()
+    }
+
+    fn identifier_name() -> String {
+        todo!()
+    }
+
+    fn error(message: String) -> crate::app::Error {
+        AppError::ViewSubmission(message)
+    }
+}
+
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct ViewClosed {
@@ -146,4 +201,17 @@ pub struct ViewClosed {
     pub user: ResponseUser,
     pub view: View<ModalResponse>,
     pub is_cleared: bool,
+}
+impl Interaction for ViewClosed {
+    fn identifier(&self) -> String {
+        todo!()
+    }
+
+    fn identifier_name() -> String {
+        todo!()
+    }
+
+    fn error(message: String) -> crate::app::Error {
+        AppError::ViewClosed(message)
+    }
 }
