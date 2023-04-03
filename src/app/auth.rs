@@ -89,7 +89,6 @@ impl Auth {
         // Encypt basestring to HMAC_sha256
         let hmac = HMAC::mac(
             // Construct basestring to encrypt
-            // Version will always be "v0" for now - Slack might change this later.
             format!("{SLACK_ENCRYPTION_VERSION}:{slack_timestamp}:{payload}"), 
             // Use signing secret as key
             self.signing_secret.clone()
@@ -102,7 +101,6 @@ impl Auth {
         };
 
         // Ensure signature is matching
-        // Again "v0" is used here - Slack might change this value later.
         if format!("{SLACK_ENCRYPTION_VERSION}={}", hex::encode(hmac)) != signature {
             return Err(Error::Authentication("Signatures didn't match".to_string()))
         };
