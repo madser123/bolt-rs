@@ -1,10 +1,9 @@
 use super::*;
 use std::fmt::Display;
-use axum::{
-    response::IntoResponse,
-    http::StatusCode,
-};
+use hyper::StatusCode;
+use thiserror::Error;
 
+#[derive(Error, Debug)]
 pub enum Error {
     Parsing(String),
     Authentication(String),
@@ -16,10 +15,12 @@ pub enum Error {
     ViewSubmission(String),
 }
 
-impl IntoResponse for Error {
-    fn into_response(self) -> axum::response::Response {
+impl Into<hyper::http::Result<hyper::Response<String>>> for Error {
+    fn into(self) -> hyper::http::Result<hyper::Response<String>> {
         println!("{self}");
-        (StatusCode::INTERNAL_SERVER_ERROR, "An error occurred.").into_response()
+        hyper::Response::builder()
+            .status(StatusCode::INTERNAL_SERVER_ERROR)
+            .body("An error occurred".to_string())
     }
 }
 

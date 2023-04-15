@@ -1,8 +1,11 @@
+use std::convert::Infallible;
 use std::{collections::HashMap, net::SocketAddr, sync::Arc};
-use axum::http::HeaderMap;
 use futures::{future::BoxFuture, Future};
 use serde::de::DeserializeOwned;
 use serde_json as json;
+
+use hyper::{Body, Request, Response, Server, Method};
+use hyper::service::{make_service_fn, service_fn};
 
 mod auth;
 mod error;
@@ -10,6 +13,7 @@ mod error;
 pub(crate) use error::Error;
 
 pub use auth::Auth;
+use tokio::net::TcpListener;
 pub use crate::payload::{
     BlockAction,
     MessageAction,
@@ -20,7 +24,8 @@ pub use crate::payload::{
 
 pub type AppResult<T> = Result<T, Error>;
 
-type Interactions<T> = HashMap<String, Box<dyn Fn(T) -> BoxFuture<'static, AppResult<()>> + Send + Sync>>;
+type IncomingInteraction<T> = Box<dyn Fn(T) -> BoxFuture<'static, AppResult<()>> + Send + Sync>;
+type Interactions<T> = HashMap<String, IncomingInteraction<T>>;
 
 pub trait Interaction: DeserializeOwned {
     fn identifier(&self) -> String;
@@ -81,9 +86,9 @@ impl App {
         self
     }
 
-    async fn handle_interaction<T: Interaction>(closures: Arc<Interactions<T>>, interaction: String) -> AppResult<()> {
+    async fn handle_interaction<T: Interaction>(closures: Arc<Interactions<T>>, interaction: json::Value) -> AppResult<()> {
         // Parse interaction
-        let interaction = match json::from_str::<T>(&interaction) {
+        let interaction = match json::from_value::<T>(interaction) {
             Ok(i) => i,
             Err(error) => return Err(T::error(format!("Tried to parse JSON to struct: {error}")))
         };
@@ -98,62 +103,79 @@ impl App {
         }
     }
 
-    pub async fn start(self) {
+    async fn shutdown_signal() {
+        // Wait for the CTRL+C signal
+        tokio::signal::ctrl_c()
+            .await
+            .expect("failed to install CTRL+C signal handler");
+    }
+    
+
+    pub async fn start(self) -> AppResult<()> {
         // Check for warnings
         self.run_pre_startup_checks();
 
-        // Closure bindings
-        let block_actions = Arc::new(self.block_actions);
-        let message_actions = Arc::new(self.message_actions);
-        let shortcuts = Arc::new(self.shortcuts);
-        let view_closes = Arc::new(self.view_closes);
-        let view_submissions = Arc::new(self.view_submissions);
-
-        // HANDLER: Interactions
-        let interaction_handler = move | headers: HeaderMap, body: String | async move {
-            // Sanitize payload
-            let payload = self.auth.sanitize_payload(&body, headers)?;
-            
-            // Parse json
-            let json: json::Map<String, json::Value> = json::from_str(&payload)?;
-
-            // Get type
-            let r#type = match json.get("type") {
-                Some(t) => t.to_string().replace('"', ""),
-                None => return Err(Error::Parsing("Received new interaction without a type!".to_string())),
-            };
-            
-            Self::log(&format!("Recieved a new '{type}' interaction"));
-
-            // Match type of interaction to handle
-            match r#type.as_str() {
-                "block_actions" 
-                | "interactive_message" => Self::handle_interaction(block_actions, payload).await?,
-                "message_action"        => Self::handle_interaction(message_actions, payload).await?,
-                "shortcut"              => Self::handle_interaction(shortcuts, payload).await?,
-                "view_closed"           => Self::handle_interaction(view_closes, payload).await?,
-                "view_submission"       => Self::handle_interaction(view_submissions, payload).await?,
-
-                t => return Err(Error::Parsing(format!("'{t}' is not a known interaction type!"))),
-            };
-
-            Ok(())
-        };
-
-        // Setup routes
-        let router = axum::Router::new()
-            .route("/", axum::routing::post(interaction_handler));
-
-        // Create server
-        let server = axum::Server::bind(&self.address);
+        // We create a TcpListener and bind it to the requested address
+        let listener = TcpListener::bind(self.address).await.unwrap();
 
         Self::log(&format!("Starting server - Serving on {}", self.address));
 
-        // Run server
-        server
-            .serve(router.into_make_service())
-            .await
-            .unwrap();
+        let addr = self.address.clone();
+
+        let shortcuts = Arc::new(self.shortcuts);
+
+        let handler = move | req: Request<Body> | async move {
+            match (req.method(), req.uri().path()) {
+                (&Method::POST, "/") => {
+                    // Sanitize payload
+                    let payload = self.auth.sanitize_payload(req).await?;
+    
+                    // Parse intermediate json
+                    let intermediate = payload.clone();
+                    let json = match intermediate.as_object() {
+                        Some(obj) => obj,
+                        None => return Err(Error::Parsing("Json was empty - Rejecting payload".to_string())),
+                    };
+    
+                    // Get type
+                    let r#type = match json.get("type") {
+                        Some(t) => t.to_string().replace('"', ""),
+                        None => return Err(Error::Parsing("Received new interaction without a type!".to_string())),
+                    };
+                    
+                    Self::log(&format!("Recieved a new '{type}' interaction"));
+    
+                    // Match type of interaction to handle
+                    match r#type.as_str() {
+                        //"block_actions" 
+                        //| "interactive_message" => self.handle_interaction(Arc::new(self.block_actions), payload).await,
+                        //"message_action"        => self.handle_interaction(Arc::new(self.message_actions), payload).await,
+                        "shortcut"              => Self::handle_interaction(shortcuts, payload).await,
+                        //"view_closed"           => self.handle_interaction(Arc::new(self.view_closes), payload).await,
+                        //"view_submission"       => self.handle_interaction(Arc::new(self.view_submissions), payload).await,
+    
+                        t => return Err(Error::Parsing(format!("'{t}' is not a known interaction type!"))),
+                    };
+    
+                    Ok(Response::new("OK".to_string()))
+                }
+            }
+        };
+
+        let server = Server::bind(&addr)
+            .serve(make_service_fn(|_conn| async {
+                // service_fn converts our function into a `Service`
+                Ok::<_, Infallible>(service_fn(handler))
+            }));
+
+        let graceful = server.with_graceful_shutdown(Self::shutdown_signal());
+
+        // Run this server for... forever!
+        if let Err(e) = graceful.await {
+            eprintln!("server error: {}", e);
+        }
+
+        Ok(())
     }
 
     fn run_pre_startup_checks(&self) {

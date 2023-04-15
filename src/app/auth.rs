@@ -1,8 +1,8 @@
 use super::*;
 
-use axum::http::HeaderMap;
 use hmac_sha256::HMAC;
 use chrono::Local;
+use bytes::Buf;
 
 const SLACK_ENCRYPTION_VERSION: &str = "v0";
 
@@ -59,18 +59,24 @@ impl Auth {
         }
     }
 
-    pub fn sanitize_payload(&self, payload: &String, headers: HeaderMap) -> AppResult<String> {
+    pub async fn sanitize_payload(&self, req: Request<hyper::body::Body>) -> AppResult<json::Value> {
         Self::log("Sanitizing new payload.");
 
         // Get headers
-        let slack_ts_header = match headers.get("X-Slack-Request-Timestamp") {
-            Some(ts) => ts,
+        let slack_ts_header = match req.headers().get("X-Slack-Request-Timestamp") {
+            Some(ts) => ts.to_owned(),
             None => return Err(Error::Authentication("Missing timestamp header!".to_string())),
         };
-        let slack_signature_header = match headers.get("X-Slack-Signature") {
-            Some(signature) => signature,
+        let slack_signature_header = match req.headers().get("X-Slack-Signature") {
+            Some(signature) => signature.to_owned(),
             None => return Err(Error::Authentication("Missing signature header!".to_string())),
         };
+
+        // Aggregate the body...
+        let whole_body = hyper::body::aggregate(req).await.unwrap();
+        // Decode as JSON...
+        let body: json::Value = json::from_reader(whole_body.reader())?;
+        let data = json::to_string(&body)?;
 
         // Parse timestamp to integer
         let slack_timestamp = match slack_ts_header.to_str() {
@@ -89,7 +95,7 @@ impl Auth {
         // Encypt basestring to HMAC_sha256
         let hmac = HMAC::mac(
             // Construct basestring to encrypt
-            format!("{SLACK_ENCRYPTION_VERSION}:{slack_timestamp}:{payload}"), 
+            format!("{SLACK_ENCRYPTION_VERSION}:{slack_timestamp}:payload={data}"), 
             // Use signing secret as key
             self.signing_secret.clone()
         );
@@ -107,10 +113,6 @@ impl Auth {
 
         Self::log("OK");
 
-        // Decode payload
-        match urlencoding::decode(&payload.replace('+', " ")) {
-            Ok(decoded) => Ok(decoded.into_owned().replace("payload=", "")),
-            Err(error) => Err(Error::Parsing(format!("Couldn't parse payload body: {error}"))),
-        }
+        Ok(body)
     }
 }
