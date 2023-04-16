@@ -92,4 +92,16 @@ impl Blocks {
     pub fn json(self) -> Vec<json::Value> {
         self.0
     }
+
+    /// Returns the blocklist as a prettified JSON-[String]
+    pub fn json_string(self) -> BoltResult<String> {
+        let json = match json::to_value(self.0) {
+            Ok(json) => json,
+            Err(error) => return Err(Error::Parsing("Blocks".to_string(), error.to_string()))
+        };
+        match json::to_string_pretty(&json) {
+            Ok(json) => Ok(json),
+            Err(error) => Err(Error::Parsing("Blocks".to_string(), error.to_string()))
+        }
+    }
 }
