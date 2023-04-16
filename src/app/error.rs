@@ -5,14 +5,28 @@ use axum::{
     http::StatusCode,
 };
 
+/// A bolt-rs App-related error
 pub enum Error {
+    /// Errors regarding parsing of requests, interactions or alike.
     Parsing(String),
+
+    /// Problems regarding Authentification of incoming requests.
     Authentication(String),
 
+
+    /// Errors relating to `block-actions` interactions from slack.
     BlockAction(String),
+
+    /// Errors relating to `message-actions` interactions from slack.
     MessageAction(String),
+
+    /// Errors relating to `shortcuts` interactions from slack.
     Shortcut(String),
+
+    /// Errors relating to `view-closed` interactions from slack.
     ViewClosed(String),
+
+    /// Errors relating to `view-submission` interactions from slack.
     ViewSubmission(String),
 }
 
