@@ -1,6 +1,7 @@
 use super::*;
 use json::Map;
 
+/// A response from slack containing either an error or a value.
 #[derive(Deserialize, Serialize, Debug, Clone, Default)]
 pub struct Response<V> {
     ok: bool,
@@ -27,7 +28,8 @@ pub struct Response<V> {
 }
 
 impl<V: serde::de::DeserializeOwned> Response<V> {
-    pub async fn from_json(
+    /// Tries to create a new instance of [Response] from a [reqwest::Response]
+    pub async fn from_response(
         resp: reqwest::Response,
     ) -> BoltResult<Self> {
         // Stupid fix for channel reappearing in `Response<Message>` with a String value, instead of a struct
@@ -47,8 +49,8 @@ impl<V: serde::de::DeserializeOwned> Response<V> {
             }
         }
         // This implementation may be rewritten
-        // I think we could check the response for the user, before returning.
-        // I just don't know how to construct the error yet. 
+        // Maybe we could check the response for the user, before returning.
+        // Don't know how to construct the error yet. s
         // How do you access an enum variant through generics?
         match json::from_value(json::Value::from(map)) {
             Ok(t) => Ok(t),
@@ -60,18 +62,22 @@ impl<V: serde::de::DeserializeOwned> Response<V> {
 
 
 impl<V> Response<V> {
+    /// If the request has no errors, this will return `true`
     pub fn is_ok(&self) -> bool {
         self.ok
     }
 
-    pub fn format_error(self) -> String {
+    /// Formats the error, metadata and timestamp into a readable string.
+    fn format_error(self) -> String {
         format!("{:?}\nMetadata: {:#?}\nTimestamp: {:?}", self.error, self.response_metadata, self.cache_ts)
     }
 
-    pub fn value(self) -> Option<V> {
+    /// Returns the requested value as an option.
+    fn value(self) -> Option<V> {
         self.value
     }
 
+    /// Unwraps the response to a result containing the value, if any.
     pub fn unpack(self) -> BoltResult<V> {
         // Check for errors
         if !self.is_ok() {

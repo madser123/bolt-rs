@@ -1,6 +1,7 @@
 use super::*;
 use text::{Any, Plain, Text};
 
+/// A composition-block of type `confirmation`
 #[skip_serializing_none]
 #[derive(Deserialize, Serialize, Debug, Clone, Default)]
 pub struct Confirmation {
@@ -12,6 +13,7 @@ pub struct Confirmation {
 }
 impl Composition for Confirmation {}
 impl Confirmation {
+    /// Creates a new [Confirmation] composition-block
     pub fn new(
         title: Text<Plain>,
         text: Text<Any>,
@@ -27,13 +29,9 @@ impl Confirmation {
         }
     }
 
+    /// Sets the style of the confirmation-buttons
     pub fn style(mut self, style: Style) -> Self {
         self.style = style.to_string();
         self
-    }
-}
-impl Build for Confirmation {
-    fn get_type(&self) -> String {
-        "confirmation".to_string()
     }
 }

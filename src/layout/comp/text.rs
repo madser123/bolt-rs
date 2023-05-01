@@ -85,6 +85,8 @@ impl Text<Plain> {
         self
     }
 }
+
+// Build is also necessary to implement because of implementations of [Element] and [ContextElement]
 impl<T: parsing::SerializeDefaultPhantomData> Build for Text<T> {
     fn get_type(&self) -> String {
         "text".to_string()

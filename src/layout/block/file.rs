@@ -1,5 +1,6 @@
 use super::*;
 
+/// A block of type `file`
 #[skip_serializing_none]
 #[derive(Deserialize, Serialize, Debug)]
 pub struct File {
@@ -19,6 +20,7 @@ impl Default for File {
     }
 }
 impl File {
+    /// Creates a new [File] block
     pub fn new(external_id: &str) -> Self {
         Self {
             external_id: external_id.to_string(),

@@ -3,6 +3,7 @@ use axum::http::HeaderMap;
 use futures::{future::BoxFuture, Future};
 use serde::de::DeserializeOwned;
 use serde_json as json;
+use colored::Colorize;
 
 mod auth;
 mod error;
@@ -18,19 +19,40 @@ pub use crate::payload::{
     ViewSubmission,
 };
 
+/// A result from a bolt-rs App.
 pub type AppResult<T> = Result<T, Error>;
 
+/// A collection of closures
 type Interactions<T> = HashMap<String, Box<dyn Fn(T) -> BoxFuture<'static, AppResult<()>> + Send + Sync>>;
 
-pub trait Interaction: DeserializeOwned {
+/// Defines behaviour for an interaction.
+/// 
+/// The identifier-functions help find the correct closure for the interaction.
+/// The error-function is used to define the error-type that the interaction should return.
+pub(crate) trait Interaction: DeserializeOwned {
     fn identifier(&self) -> String;
     fn identifier_name() -> String;
     fn error(message: String) -> crate::app::Error; 
 }
 
-pub trait Logger {
-    fn log(message: &str);
-    fn warn(message: &str);
+/// The logging "system" for slack-rs.
+/// 
+/// This trait is used internally to streamline the logging output.
+pub(crate) trait Logger {
+    /// Should the name of the object the logger trait is attached to
+    fn name() -> String;
+
+    /// A normal informational log:`[INFO][<name>] <message>`
+    fn log(message: &str) {
+        let banner = format!("[INFO][{}]", Self::name()).green();
+        println!("{banner} {message}");
+    }
+
+    /// A warning log:`[WARNING][<name>] <message>`
+    fn warn(message: &str) {
+        let banner = format!("[WARNING][{}]", Self::name()).yellow();
+        println!("{banner} {message}");
+    }
 }
 
 pub struct App {
@@ -59,12 +81,8 @@ impl Default for App {
 }
 
 impl Logger for App {
-    fn log(message: &str) {
-        println!("[INFO][App] {message}");
-    }
-
-    fn warn(message: &str) {
-        println!("[WARNING][App] {message}");
+    fn name() -> String {
+        "App".to_string()
     }
 }
 

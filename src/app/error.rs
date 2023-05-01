@@ -1,5 +1,6 @@
 use super::*;
 use std::fmt::Display;
+use colored::Colorize;
 use axum::{
     response::IntoResponse,
     http::StatusCode,
@@ -33,6 +34,8 @@ pub enum Error {
 impl IntoResponse for Error {
     fn into_response(self) -> axum::response::Response {
         println!("{self}");
+
+        // Never leak the actual error to the endpoint.
         (StatusCode::INTERNAL_SERVER_ERROR, "An error occurred.").into_response()
     }
 }
@@ -41,25 +44,32 @@ impl Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Parsing(error) => {
-                write!(f, "[ERROR][Parsing] {error}")
+                let banner = "[ERROR][Parsing]".red();
+                write!(f, "{banner} {error}")
             },
             Self::Authentication(error) => {
-                write!(f, "[ERROR][Authentication] {error}")
+                let banner = "[ERROR][Authentication]".red();
+                write!(f, "{banner} {error}")
             },
             Self::BlockAction(error) => {
-                write!(f, "[ERROR][BlockAction] {error}")
+                let banner = "[ERROR][BlockAction]".red();
+                write!(f, "{banner} {error}")
             },
             Self::MessageAction(error) => {
-                write!(f, "[ERROR][MessageAction] {error}")
+                let banner = "[ERROR][MessageAction]".red();
+                write!(f, "{banner} {error}")
             },
             Self::Shortcut(error) => {
-                write!(f, "[ERROR][Shortcut] {error}")
+                let banner = "[ERROR][Shortcut]".red();
+                write!(f, "{banner} {error}")
             },
             Self::ViewClosed(error) => {
-                write!(f, "[ERROR][ViewClosed] {error}")
+                let banner = "[ERROR][ViewClosed]".red();
+                write!(f, "{banner} {error}")
             },
             Self::ViewSubmission(error) => {
-                write!(f, "[ERROR][ViewSubmission] {error}")
+                let banner = "[ERROR][ViewSubmission]".red();
+                write!(f, "{banner} {error}")
             },
         }
     }

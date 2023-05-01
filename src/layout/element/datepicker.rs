@@ -1,5 +1,6 @@
 use super::*;
 
+/// Represents an element of type `datepicker`
 #[skip_serializing_none]
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct DatePicker {
@@ -28,6 +29,7 @@ impl Default for DatePicker {
     }
 }
 impl DatePicker {
+    /// Creates a new [DatePicker] element
     pub fn new(action_id: &str) -> Self {
         Self {
             action_id: action_id.to_string(),
@@ -35,21 +37,25 @@ impl DatePicker {
         }
     }
 
+    /// Sets the initial date selected upon load
     pub fn initial_date(mut self, date: &str) -> Self {
         self.initial_date = Some(date.to_string());
         self
     }
 
+    /// Adds a confirmation dialogue to the form
     pub fn confirm(mut self, confirm: Confirmation) -> Self {
         self.confirm = Some(confirm);
         self
     }
 
+    /// Forces the element to be focused upon load
     pub fn focus_on_load(mut self, focus: bool) -> Self {
         self.focus_on_load = Some(focus);
         self
     }
 
+    /// Adds placeholder text to the datepicker
     pub fn placeholder(mut self, text: Text<Plain>) -> Self {
         self.placeholder = Some(text);
         self

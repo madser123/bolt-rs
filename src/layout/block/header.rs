@@ -1,6 +1,7 @@
 use super::*;
 use comp::{Text, Plain};
 
+/// A block of type `header`
 #[skip_serializing_none]
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Header {
@@ -19,6 +20,7 @@ impl Default for Header {
     }
 }
 impl Header {
+    /// Creates a new [Header] block
     pub fn new(text: Text<Plain>) -> Self {
         Self {
             text,

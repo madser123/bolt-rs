@@ -1,5 +1,6 @@
 use super::*;
 
+/// Represents an element of type `image`
 #[skip_serializing_none]
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct Image {
@@ -20,6 +21,7 @@ impl Default for Image {
     }
 }
 impl Image {
+    /// Creates a new [Image] element
     pub fn new(url: &str, alt_text: &str) -> Self {
         Self {
             image_url: url.to_string(),

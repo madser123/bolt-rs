@@ -7,29 +7,24 @@ edition = "2021"
 full    = ["client"]
 default = ["client"]
 
-client  = [
-    "dep:axum", 
-    "dep:chrono", 
-    "dep:hex", 
-    "dep:hmac-sha256",
-    "dep:urlencoding", 
-]
+client  = ["dep:axum", "dep:chrono", "dep:futures", "dep:hex", "dep:hmac-sha256", "dep:urlencoding", "dep:colored"]
 
 [dependencies]
-# Normal dependencies
-futures     = { version = "0.3.27"  }
+# General dependencies (Blocks, Slack-types, etc.)
 reqwest     = { version = "0.11.0", features = ["json", "multipart"] }
 serde       = { version = "1.0.145" }
 serde_json  = { version = "1.0.85"  }
 serde_with  = { version = "2.0.1"   }
 url         = { version = "2.3.1"   }
 
-# Client dependencies
+# Client (App) dependencies
 axum        = { version = "0.6.12", optional = true }
 chrono      = { version = "0.4.24", optional = true }
+futures     = { version = "0.3.27", optional = true }
 hex         = { version = "0.4.3",  optional = true }
 hmac-sha256 = { version = "1.1.6",  optional = true }
 urlencoding = { version = "2.1.2",  optional = true }
+colored     = { version = "2.0.0",  optional = true }
 
 # Development / Testing dependencies
 [dev-dependencies]

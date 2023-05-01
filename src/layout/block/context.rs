@@ -1,6 +1,7 @@
 use super::*;
 use element::ContextElement;
 
+/// A block of type `context`
 #[skip_serializing_none]
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Context {
@@ -19,11 +20,12 @@ impl Default for Context {
     }
 }
 impl Context {
+    /// Creates a new [Context] block
     pub fn new() -> Self {
         Self::default()
     }
 
-    /// Add multiple elements
+    /// Pushes multiple elements to the context
     pub fn elements(mut self, elements: &mut Vec<impl ContextElement>) -> BoltResult<Self> {
         for e in elements {
             self.elements.push(e.build()?);
@@ -31,6 +33,7 @@ impl Context {
         Ok(self)
     }
 
+    /// Pushes a single element to the context
     pub fn element(mut self, element: impl ContextElement) -> BoltResult<Self> {
         self.elements.push(element.build()?);
         Ok(self)

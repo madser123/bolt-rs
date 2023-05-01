@@ -1,6 +1,8 @@
 use super::*;
 use comp::{Text, Plain};
 
+
+/// A block of type `video`
 #[skip_serializing_none]
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Video {
@@ -35,6 +37,7 @@ impl Default for Video {
     }
 }
 impl Video {
+    /// Creates a new [Video] block
     pub fn new(title: Text<Plain>, video_url: &str, thumbnail_url: &str, alt_text: &str) -> Self {
         Self {
             title,
@@ -75,6 +78,7 @@ impl Video {
         self
     }
 
+    /// Specifies a url that should open when the video-title is clicked.
     pub fn title_url(mut self, url: &str) -> Self {
         self.title_url = Some(url.to_string());
         self

@@ -48,6 +48,6 @@ impl Request {
     /// If the request can't be sent, an error will be returned.
     /// Any other API-related errors will be included in the [Response].
     pub async fn send<V: DeserializeOwned>(self) -> BoltResult<Response<V>> {
-        Response::from_json(self.0.send().await?).await
+        Response::from_response(self.0.send().await?).await
     }
 }

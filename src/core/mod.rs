@@ -9,19 +9,43 @@ pub mod state;
 
 pub type BoltResult<T> = Result<T, Error>;
 
+/// A Bolt-rs related error.
 #[derive(Debug)]
 pub enum Error {
+    /// Errors regarding blocks.
     Block(String, String),
+
+    /// Errors with building types to JSON.
     Building(String, json::Error),
+
+    /// Errors from conversations.
     Conversation(String),
+
+    /// Errors regarding composition-blocks.
     Composition(String, String),
+
+    /// Errors regarding element-blocks.
     Element(String, String),
+
+    /// Errors regarding files (upload/download).
     File(String),
+
+    /// Errors from messages.
     Message(String),
+
+    /// Errors with parsing certain elements.
     Parsing(String, String),
+
+    /// Errors regarding sending requests to slack.
     Request(reqwest::Error),
+
+    /// Errors originating from slack-responses.
     Response(String, String),
+
+    /// Errors regarding users.
     User(String),
+
+    /// Errors regarding views.
     View(String),
 }
 
@@ -74,6 +98,7 @@ impl From<reqwest::Error> for Error {
     }
 }
 
+/// Used internally to build blocks to JSON.
 pub trait Build: Serialize {
     fn build(&self) -> BoltResult<json::Value> {
         match json::to_value(self) {

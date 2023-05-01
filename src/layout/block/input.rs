@@ -2,6 +2,7 @@ use super::*;
 use element::{Element, InputElement};
 use comp::{Text, Plain};
 
+/// A block of type `input`
 #[skip_serializing_none]
 #[derive(Serialize)]
 pub struct Input<E: Element> {
@@ -15,6 +16,7 @@ pub struct Input<E: Element> {
 }
 impl<E: InputElement> Block for Input<E> {}
 impl<E: InputElement> Input<E> {
+    /// Creates a new [Input] block
     pub fn new(element: E, label: Text<Plain>) -> Self {
         Self {
             r#type: "input".to_string(),

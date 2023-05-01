@@ -1,5 +1,6 @@
 use super::*;
 
+/// Creates a new [Overflow] element with static options.
 #[skip_serializing_none]
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct Overflow {
@@ -22,6 +23,7 @@ impl Default for Overflow {
     }
 }
 impl Overflow {
+    /// Creates a new [Overflow] element
     pub fn new(action_id: &str, options: Vec<OptionObject<Plain>>) -> Self {
         Self {
             action_id: action_id.to_string(),
@@ -30,6 +32,7 @@ impl Overflow {
         }
     }
 
+    /// Adds a confirmation-dialogue to the field
     pub fn confirm(mut self, confirm: Confirmation) -> Self {
         self.confirm = Some(confirm);
         self

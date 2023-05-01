@@ -38,6 +38,7 @@ trait MessagesBlock {}
 trait HometabBlock {}
 
 
+/// A list of blocks as json-strings.
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
 pub struct Blocks(Vec<json::Value>);
 

@@ -3,6 +3,7 @@ use comp::Text;
 use reqwest::multipart::{Form, Part};
 use std::{fs, marker::PhantomData};
 
+/// A [File] originating from Slack
 #[derive(Deserialize, Serialize, Debug, Default)]
 pub struct File {
     id: String,
@@ -14,30 +15,39 @@ pub struct File {
 }
 
 impl File {
+    /// Returns the `url_private` property
     pub fn url(&self) -> &str {
         &self.url_private
     }
 
+    /// Returns the `url_private_download` property
     pub fn url_download(&self) -> &str {
         &self.url_private_download
     }
 
+    /// Returns the `permalink` property
     pub fn permalink(&self) -> &str {
         &self.permalink
     }
 
+    /// Returns the `permalink_public` property
     pub fn permalink_public(&self) -> &str {
         &self.permalink_public
-    }
+    }   
 
+    /// Returns the slack-file-id 
     pub fn id(&self) -> &str {
         &self.id
     }
 
+    /// Returns the name of the file
     pub fn name(&self) -> &str {
         &self.name
     }
 
+    /// Uses alreaady known URL's to construct the public url to send as a message in slack.
+    /// This URL will **only** work if the file is made public in slack. This can be done by using the
+    /// `publish` method.
     pub fn get_public_url(&self) -> String {
         let filename = self.name().to_lowercase();
         let url = url::Url::parse(self.permalink_public()).unwrap();
@@ -60,6 +70,10 @@ impl File {
         format!("https://files.slack.com/files-pri/{team_id}-{file_id}/{filename}?pub_secret={pub_secret}")
     }
 
+    /// Publishes the file for "public" consumption in slack.
+    /// 
+    /// **Disclaimer**: This is needed for the `get_public_url` method to work, 
+    /// if the file is not already available to the public.
     pub async fn publish(self, token: &str) -> BoltResult<Self> {
         let form = Form::new()
             .text("token", token.to_owned())
@@ -72,6 +86,8 @@ impl File {
             .unpack()
     }
 }
+
+/// A file-upload to slack.
 #[derive(Default, Debug)]
 pub struct Upload<C = Text> {
     c: PhantomData<C>,
@@ -86,7 +102,10 @@ pub struct Upload<C = Text> {
     title: Option<String>,
 }
 
+/// An upload-payload constructor for uploading files to slack.
 impl Upload {
+
+    /// Load a file from a path to be uploaded to slack
     pub fn from_path<P: std::convert::AsRef<std::path::Path>>(
         path: P,
     ) -> BoltResult<Upload<File>> {
@@ -101,6 +120,7 @@ impl Upload {
         Ok(Self::from_bytes(file).filename(&filename))
     }
 
+    /// Load a file from bytes to be uploaded to slack
     pub fn from_bytes(bytes: Vec<u8>) -> Upload<File> {
         Upload::<File> {
             c: PhantomData::<File>,
@@ -109,6 +129,7 @@ impl Upload {
         }
     }
 
+    /// Create a file from plaintext to be uploaded to slack
     pub fn from_text(text: &str) -> Upload<Text> {
         Upload::<Text> {
             c: PhantomData::<Text>,
@@ -116,51 +137,8 @@ impl Upload {
             ..Default::default()
         }
     }
-}
 
-impl<C> Upload<C> {
-    pub fn channels(mut self, channels: Vec<&str>) -> Self {
-        self.channels = Some(channels.join(","));
-        self
-    }
-
-    pub fn filename(mut self, filename: &str) -> Self {
-        self.filename = Some(filename.to_string());
-        self
-    }
-
-    pub fn filetype(mut self, filetype: &str) -> Self {
-        self.filetype = Some(filetype.to_string());
-        self
-    }
-
-    pub fn initial_comment(mut self, comment: &str) -> Self {
-        self.initial_comment = Some(comment.to_string());
-        self
-    }
-
-    pub fn thread_ts(mut self, thread_ts: &str) -> Self {
-        self.thread_ts = Some(thread_ts.to_string());
-        self
-    }
-
-    pub fn title(mut self, title: &str) -> Self {
-        self.title = Some(title.to_string());
-        self
-    }
-}
-
-impl Upload<Text> {
-    pub fn file(self, file: Vec<u8>) -> Upload<File> {
-        Upload::<File> {
-            c: PhantomData::<File>,
-            file: Some(file),
-            ..Default::default()
-        }
-    }
-}
-
-impl Upload<File> {
+    /// Uploads the content to slack, returning the file-object.
     pub async fn upload(self, token: &str) -> BoltResult<File> {
         let mut form = Form::new().text("token", token.to_owned());
 
@@ -194,5 +172,43 @@ impl Upload<File> {
             .send::<File>()
             .await?
             .unpack()
+    }
+}
+
+impl<C> Upload<C> {
+    /// Sets the channels that the file should be sent to after uploading as a message.
+    pub fn channels(mut self, channels: Vec<&str>) -> Self {
+        self.channels = Some(channels.join(","));
+        self
+    }
+
+    /// Sets the filename (Automatically set with the `from_path` or `from_bytes` methods)
+    pub fn filename(mut self, filename: &str) -> Self {
+        self.filename = Some(filename.to_string());
+        self
+    }
+
+    /// Sets the filetype
+    pub fn filetype(mut self, filetype: &str) -> Self {
+        self.filetype = Some(filetype.to_string());
+        self
+    }
+
+    /// Upload the file with a comment
+    pub fn initial_comment(mut self, comment: &str) -> Self {
+        self.initial_comment = Some(comment.to_string());
+        self
+    }
+
+    /// Sets the thread to send the uploaded file to as a message.
+    pub fn thread_ts(mut self, thread_ts: &str) -> Self {
+        self.thread_ts = Some(thread_ts.to_string());
+        self
+    }
+
+    /// A title for the file - This differs from the file-name.
+    pub fn title(mut self, title: &str) -> Self {
+        self.title = Some(title.to_string());
+        self
     }
 }
