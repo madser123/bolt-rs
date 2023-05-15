@@ -79,6 +79,14 @@ impl UserList {
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
+
+    pub fn iter(&self) -> std::slice::Iter<'_, User> {
+        self.0.iter()
+    }
+
+    pub fn iter_mut(&mut self) -> std::slice::IterMut<'_, User> {
+        self.0.iter_mut()
+    }
 }
 
 impl User {
