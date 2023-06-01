@@ -103,7 +103,7 @@ impl AsBlocks for MyData {
         blocks.push(block::Divider::new())?;
         blocks.push(block::Section::new()
             .id("my_section")
-            .field(Text::mrkdwn(&format!("*String:* {}", self.number)))
+            .field(Text::mrkdwn(&format!("*String:* {}", self.string)))
             .field(Text::mrkdwn(&format!("*Number:* {}", self.number)))
         )?;
 
