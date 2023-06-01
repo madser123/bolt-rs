@@ -79,13 +79,14 @@ impl UserList {
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
+}
 
-    pub fn iter(&self) -> std::slice::Iter<'_, User> {
-        self.0.iter()
-    }
+impl std::iter::IntoIterator for UserList {
+    type Item = User;
+    type IntoIter = <Vec<User> as IntoIterator>::IntoIter;
 
-    pub fn iter_mut(&mut self) -> std::slice::IterMut<'_, User> {
-        self.0.iter_mut()
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.into_iter()
     }
 }
 
