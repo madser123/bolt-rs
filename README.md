@@ -99,9 +99,9 @@ impl AsBlocks for MyData {
     fn as_blocks(&self) -> bolt_rs::BoltResult<Blocks> {
         let mut blocks = Blocks::new();
 
-        blocks.push(block::Header::new(Text::plain("My data!")))?;
-        blocks.push(block::Divider::new())?;
-        blocks.push(block::Section::new()
+        blocks.push(&block::Header::new(Text::plain("My data!")))?;
+        blocks.push(&block::Divider::new())?;
+        blocks.push(&block::Section::new()
             .id("my_section")
             .field(Text::mrkdwn(&format!("*String:* {}", self.string)))
             .field(Text::mrkdwn(&format!("*Number:* {}", self.number)))
