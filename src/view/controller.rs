@@ -8,6 +8,7 @@ pub struct Controller<T: Serialize + parsing::SerializeDefaultPhantomData> {
 }
 
 impl<T: Serialize + parsing::SerializeDefaultPhantomData> Controller<T> {
+    /// Creates a new [Controller] from a trigger
     pub fn trigger(trigger: &str, view: View<T>) -> Self {
         Controller {
             view,
@@ -16,6 +17,7 @@ impl<T: Serialize + parsing::SerializeDefaultPhantomData> Controller<T> {
         }
     }
 
+    /// Creates a new [Controller] to update a view
     pub fn update(view: View<T>) -> Self {
         Controller {
             external_id: view.external_id.clone(),

@@ -22,12 +22,13 @@ pub use video::Video;
 
 pub trait Block: Build {}
 
-/// Convert any type into blocks!
+/// Converts any type into blocks
 pub trait AsBlocks {
     /// Turns `self` into a list of `Blocks`
     fn as_blocks(&self) -> BoltResult<Blocks>;
 }
 
+/// Converts any type into a single block
 pub trait AsBlock<B: Block> {
     /// Turns `self` into a `Block` of type `B`
     fn as_block(&self) -> BoltResult<B>;

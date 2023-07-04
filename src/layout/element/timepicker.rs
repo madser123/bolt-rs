@@ -29,6 +29,7 @@ impl Default for TimePicker {
     }
 }
 impl TimePicker {
+    /// Creates a new [TimePicker] element
     pub fn new(action_id: &str) -> Self {
         Self {
             action_id: action_id.to_string(),
@@ -36,26 +37,31 @@ impl TimePicker {
         }
     }
 
+    /// Sets the initial time selected.
     pub fn initial_time(mut self, hour: i8, minute: i8) -> Self {
         self.initial_time = Some(format!("{hour:02}:{minute:02}"));
         self
     }
 
+    /// Applies confirmation to the element
     pub fn confirm(mut self, confirm: Confirmation) -> Self {
         self.confirm = Some(confirm);
         self
     }
 
+    /// Sets the element to be focused on load.
     pub fn focus_on_load(mut self) -> Self {
         self.focus_on_load = Some(true);
         self
     }
 
+    /// Sets the placeholder text for the element
     pub fn placeholder(mut self, text: Text<Plain>) -> Self {
         self.placeholder = Some(text);
         self
     }
 
+    /// Sets the timezone in which the date is to be selected for.
     pub fn timezone(mut self, iana: &str) -> Self {
         self.timezone = Some(iana.to_string());
         self

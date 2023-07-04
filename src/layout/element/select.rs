@@ -29,6 +29,7 @@ pub struct Select<M: Menu = StaticOptions> {
     initial_channel: Option<String>,
 }
 impl Select {
+    /// Creates a new [Select] element with static options.
     pub fn static_options(
         action_id: &str,
         options: Vec<OptionObject<Plain>>,
@@ -41,6 +42,7 @@ impl Select {
         }
     }
 
+    /// Creates a new [Select] element with external-data
     pub fn external_data(action_id: &str) -> Select<ExternalData> {
         Select::<ExternalData> {
             r#type: "external_select".to_string(),
@@ -49,6 +51,7 @@ impl Select {
         }
     }
 
+    /// Creates a new [Select] element with a user-list.
     pub fn user_list(action_id: &str) -> Select<UserList> {
         Select::<UserList> {
             r#type: "users_select".to_string(),
@@ -57,6 +60,7 @@ impl Select {
         }
     }
 
+    /// Creates a new [Select] element with a conversation-list.
     pub fn conversation_list(action_id: &str) -> Select<ConversationList> {
         Select::<ConversationList> {
             r#type: "conversations_select".to_string(),
@@ -65,6 +69,7 @@ impl Select {
         }
     }
 
+    /// Creates a new [Select] element with a public-channels list.
     pub fn public_channels(action_id: &str) -> Select<PublicChannels> {
         Select::<PublicChannels> {
             r#type: "channels_select".to_string(),
@@ -77,76 +82,90 @@ impl<M: Menu> Select<M>
 where
     Self: Element,
 {
+    /// Applies confirmation to the element
     pub fn confirm(mut self, confirm: Confirmation) -> Self {
         self.confirm = Some(confirm);
         self
     }
 
+    /// Sets the element to be focused on load.
     pub fn focus_on_load(mut self, focus: bool) -> Self {
         self.focus_on_load = Some(focus);
         self
     }
 
+    /// Sets the placeholder-text for the element.
     pub fn placeholder(mut self, text: Text<Plain>) -> Self {
         self.placeholder = Some(text);
         self
     }
 }
 impl Select<StaticOptions> {
+    /// Groups the options into sections that the user can see
     pub fn option_groups(mut self, groups: Vec<OptionGroup>) -> Self {
         self.option_groups = Some(groups);
         self
     }
 
+    /// Sets the initial option selected
     pub fn initial_option(mut self, option: OptionObject<Plain>) -> Self {
         self.initial_option = Some(option);
         self
     }
 }
 impl Select<ExternalData> {
+    /// Sets the minimum query-length allowed
     pub fn min_query_length(mut self, length: i64) -> Self {
         self.min_query_length = Some(length);
         self
     }
 
+    /// Sets the initial option selected
     pub fn initial_option(mut self, option: OptionObject<Plain>) -> Self {
         self.initial_option = Some(option);
         self
     }
 }
 impl Select<UserList> {
+    /// Sets the initial user selected
     pub fn initial_user(mut self, user: String) -> Self {
         self.initial_user = Some(user);
         self
     }
 }
 impl Select<ConversationList> {
+    /// Sets the initial conversation selected
     pub fn initial_conversation(mut self, conversation: String) -> Self {
         self.initial_conversation = Some(conversation);
         self
     }
 
+    /// Sets the initial conversation selected to be the current one.
     pub fn default_to_current(mut self) -> Self {
         self.default_to_current_conversation = Some(true);
         self
     }
 
+    /// Applies a filter to the conversation-list.
     pub fn filter(mut self, filter: Filter) -> Self {
         self.filter = Some(filter);
         self
     }
 
+    /// Enables a response-url for the element
     pub fn enable_response_url(mut self) -> Self {
         self.response_url_enabled = Some(true);
         self
     }
 }
 impl Select<PublicChannels> {
+    /// Sets the initial channel selected.
     pub fn initial_channel(mut self, channel: String) -> Self {
         self.initial_channel = Some(channel);
         self
     }
 
+    /// Enables a response-url for the element
     pub fn enable_response_url(mut self) -> Self {
         self.response_url_enabled = Some(true);
         self

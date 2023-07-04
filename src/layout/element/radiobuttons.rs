@@ -27,6 +27,7 @@ impl Default for RadioButtons {
     }
 }
 impl RadioButtons {
+    /// Creates a new [RadioButtons] element.
     pub fn new(action_id: &str, options: Vec<OptionObject>) -> Self {
         Self {
             action_id: action_id.to_string(),
@@ -35,16 +36,19 @@ impl RadioButtons {
         }
     }
 
+    /// Sets the initial options selected
     pub fn initial_option(mut self, option: OptionObject) -> Self {
         self.initial_option = Some(option);
         self
     }
 
+    /// Applies confirmation to the element
     pub fn confirm(mut self, confirm: Confirmation) -> Self {
         self.confirm = Some(confirm);
         self
     }
 
+    /// Sets the element to be focused on load.
     pub fn focus_on_load(mut self) -> Self {
         self.focus_on_load = Some(true);
         self

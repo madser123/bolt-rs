@@ -44,6 +44,7 @@ impl<T: parsing::SerializeDefaultPhantomData> Default for Text<T> {
     }
 }
 impl Text {
+    /// Creates a markdown-text object.
     pub fn mrkdwn(text: &str) -> Text<Markdown> {
         Text::<Markdown> {
             r#type: "mrkdwn".to_string(),
@@ -54,6 +55,7 @@ impl Text {
         }
     }
 
+    /// Creates a plain-text object.
     pub fn plain(text: &str) -> Text<Plain> {
         Text::<Plain> {
             r#type: "plain_text".to_string(),
@@ -65,21 +67,25 @@ impl Text {
     }
 }
 impl<T: parsing::SerializeDefaultPhantomData> Text<T> {
+    /// Returns the length of the text
     pub fn len(&self) -> usize {
         self.text.len()
     }
 
+    /// Checks wether or not the text is empty.
     pub fn is_empty(&self) -> bool {
         self.text.is_empty()
     }
 }
 impl Text<Markdown> {
+    /// Sets the markdown to be verbatim.
     pub fn verbatim(mut self) -> Self {
         self.verbatim = Some(true);
         self
     }
 }
 impl Text<Plain> {
+    /// Applies emoji-formatting to the plain-text object.
     pub fn emoji(mut self) -> Self {
         self.emoji = Some(true);
         self
