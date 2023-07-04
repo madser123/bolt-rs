@@ -1,5 +1,7 @@
-use super::*;
-use comp::{Text, Plain};
+use super::{
+    comp::{Plain, Text},
+    skip_serializing_none, Block, Build, Debug, Deserialize, Serialize,
+};
 
 /// A block of type `header`
 #[skip_serializing_none]
@@ -21,6 +23,7 @@ impl Default for Header {
 }
 impl Header {
     /// Creates a new [Header] block
+    #[must_use]
     pub fn new(text: Text<Plain>) -> Self {
         Self {
             text,
@@ -29,6 +32,7 @@ impl Header {
     }
 
     /// Add a block-id
+    #[must_use]
     pub fn id(mut self, id: &str) -> Self {
         self.block_id = Some(id.to_string());
         self

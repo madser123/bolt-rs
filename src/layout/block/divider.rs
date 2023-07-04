@@ -1,4 +1,4 @@
-use super::*;
+use super::{skip_serializing_none, Block, Build, Debug, Deserialize, Serialize};
 
 /// A block of type `divider`
 #[skip_serializing_none]
@@ -18,11 +18,13 @@ impl Default for Divider {
 }
 impl Divider {
     /// Creates a new [Divider] block
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
 
     /// Add a block-id
+    #[must_use]
     pub fn id(mut self, id: &str) -> Self {
         self.block_id = Some(id.to_string());
         self

@@ -1,8 +1,11 @@
-use super::*;
-use comp::{Text, Any};
-use view::View;
+use super::{
+    block, comp, element, skip_serializing_none, state, user, view, Deserialize, ModalResponse,
+    Serialize,
+};
+use crate::app::{Error as AppError, Interaction};
+use comp::{Any, Text};
 use user::Team;
-use crate::app::{Interaction, Error as AppError};
+use view::View;
 
 // Types
 
@@ -79,7 +82,6 @@ impl Interaction for BlockAction {
         AppError::BlockAction(message)
     }
 }
-
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct MessageAction {
@@ -192,7 +194,6 @@ impl Interaction for ViewSubmission {
         AppError::ViewSubmission(message)
     }
 }
-
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct ViewClosed {

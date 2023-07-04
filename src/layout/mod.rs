@@ -1,12 +1,13 @@
-use crate::pre::*;
+use crate::pre::{
+    json, parsing, skip_serializing_none, BoltResult, Build, Deserialize, Error, Serialize,
+};
 
-use std::fmt::{Debug, Display, Formatter};
 use serde::de::DeserializeOwned;
-
+use std::fmt::{Debug, Display, Formatter};
 
 pub mod block;
-pub mod element;
 pub mod comp;
+pub mod element;
 
 #[derive(Deserialize, Serialize, Debug, Clone, Default)]
 pub enum Style {
@@ -19,14 +20,17 @@ pub enum Style {
 impl Display for Style {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            Style::Default => write!(f, "default"),
-            Style::Danger => write!(f, "danger"),
-            Style::Primary => write!(f, "primary"),
+            Self::Default => write!(f, "default"),
+            Self::Danger => write!(f, "danger"),
+            Self::Primary => write!(f, "primary"),
         }
     }
 }
 
-pub trait SurfaceType: parsing::SerializeDefaultPhantomData + DeserializeOwned + Serialize + Debug {}
+pub trait SurfaceType:
+    parsing::SerializeDefaultPhantomData + DeserializeOwned + Serialize + Debug
+{
+}
 
 #[derive(Deserialize, Serialize, Default, Debug, Clone)]
 pub struct HomeTab {}

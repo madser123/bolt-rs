@@ -1,14 +1,14 @@
-use super::*;
+use super::{skip_serializing_none, Composition, Debug, Deserialize, Serialize};
 
 /// A filter inclusion-parameter
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "lowercase")]
-pub enum FilterInclusion {
+pub enum Inclusion {
     /// Conversations with the calling user/app
-    Im, 
+    Im,
 
     // Group-conversations with the calling user/app
-    MpIm, 
+    MpIm,
 
     /// Private channels
     Private,
@@ -21,31 +21,35 @@ pub enum FilterInclusion {
 #[skip_serializing_none]
 #[derive(Deserialize, Serialize, Debug, Clone, Default)]
 pub struct Filter {
-    include: Vec<FilterInclusion>,
+    include: Vec<Inclusion>,
     exclude_external_shared_channels: bool,
     exclude_bot_users: bool,
 }
 impl Composition for Filter {}
 impl Filter {
-    /// Creates a new [Filter] composition-block
+    /// Creates a new [`Filter`] composition-block
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
 
     /// Includes the specified types of channels/conversations
-    pub fn include(mut self, mut include: Vec<FilterInclusion>) -> Self {
+    #[must_use]
+    pub fn include(mut self, mut include: Vec<Inclusion>) -> Self {
         self.include.append(&mut include);
         self
     }
 
     /// Excludes external channels
-    pub fn exclude_external_shared_channels(mut self) -> Self {
+    #[must_use]
+    pub const fn exclude_external_shared_channels(mut self) -> Self {
         self.exclude_external_shared_channels = true;
         self
     }
 
     /// Excludes conversations with bot users
-    pub fn exclude_bot_users(mut self) -> Self {
+    #[must_use]
+    pub const fn exclude_bot_users(mut self) -> Self {
         self.exclude_bot_users = true;
         self
     }

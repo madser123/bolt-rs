@@ -1,5 +1,7 @@
-use super::*;
-use element::ActionsElement;
+use super::{
+    element::ActionsElement, json, skip_serializing_none, Block, BoltResult, Build, Debug,
+    Deserialize, Serialize,
+};
 
 /// A block of type `actions`
 #[skip_serializing_none]
@@ -21,11 +23,17 @@ impl Default for Actions {
 }
 impl Actions {
     /// Creates a new [Actions] block.
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
 
     /// Add multiple elements
+    ///
+    /// # Errors
+    ///
+    /// An error will occur if one or more of the supplied elements fails serializing.
+    ///
     pub fn elements(mut self, elements: Vec<impl ActionsElement>) -> BoltResult<Self> {
         for e in elements {
             self.elements.push(e.build()?);
@@ -34,6 +42,7 @@ impl Actions {
     }
 
     /// Add a block-id
+    #[must_use]
     pub fn id(mut self, id: &str) -> Self {
         self.block_id = Some(id.to_string());
         self

@@ -1,4 +1,4 @@
-use super::*;
+use super::{skip_serializing_none, Block, Build, Debug, Deserialize, Serialize};
 
 /// A block of type `file`
 #[skip_serializing_none]
@@ -21,6 +21,7 @@ impl Default for File {
 }
 impl File {
     /// Creates a new [File] block
+    #[must_use]
     pub fn new(external_id: &str) -> Self {
         Self {
             external_id: external_id.to_string(),
@@ -29,6 +30,7 @@ impl File {
     }
 
     /// Add a block-id
+    #[must_use]
     pub fn id(mut self, id: &str) -> Self {
         self.block_id = Some(id.to_string());
         self

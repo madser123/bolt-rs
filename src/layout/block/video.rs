@@ -1,6 +1,7 @@
-use super::*;
-use comp::{Text, Plain};
-
+use super::{
+    comp::{Plain, Text},
+    skip_serializing_none, Block, Build, Debug, Deserialize, Serialize,
+};
 
 /// A block of type `video`
 #[skip_serializing_none]
@@ -38,6 +39,7 @@ impl Default for Video {
 }
 impl Video {
     /// Creates a new [Video] block
+    #[must_use]
     pub fn new(title: Text<Plain>, video_url: &str, thumbnail_url: &str, alt_text: &str) -> Self {
         Self {
             title,
@@ -49,36 +51,42 @@ impl Video {
     }
 
     /// Add an author to the video
+    #[must_use]
     pub fn author(mut self, name: &str) -> Self {
         self.author_name = Some(name.to_string());
         self
     }
 
     /// Add a block-id
+    #[must_use]
     pub fn id(mut self, id: &str) -> Self {
         self.block_id = Some(id.to_string());
         self
     }
 
     /// Adds a video description
+    #[must_use]
     pub fn description(mut self, text: Text<Plain>) -> Self {
         self.description = Some(text);
         self
     }
 
     /// Add a provider icon
+    #[must_use]
     pub fn provider_icon(mut self, url: &str) -> Self {
         self.provider_icon_url = Some(url.to_string());
         self
     }
 
     /// Add a provider name
+    #[must_use]
     pub fn provider(mut self, name: &str) -> Self {
         self.provider_name = Some(name.to_string());
         self
     }
 
     /// Specifies a url that should open when the video-title is clicked.
+    #[must_use]
     pub fn title_url(mut self, url: &str) -> Self {
         self.title_url = Some(url.to_string());
         self

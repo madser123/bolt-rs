@@ -1,4 +1,7 @@
-use super::*;
+use super::{
+    skip_serializing_none, ActionsElement, Build, Confirmation, Debug, Deserialize, Element,
+    InputElement, Serialize,
+};
 
 /// Represents an element of type `datetimepicker`
 #[skip_serializing_none]
@@ -26,7 +29,8 @@ impl Default for DatetimePicker {
     }
 }
 impl DatetimePicker {
-    /// Creates a new [DatetimePicker] element
+    /// Creates a new [`DatetimePicker`] element
+    #[must_use]
     pub fn new(action_id: &str) -> Self {
         Self {
             action_id: action_id.to_string(),
@@ -35,19 +39,22 @@ impl DatetimePicker {
     }
 
     /// Sets the initial datetime selected upon load
+    #[must_use]
     pub fn initial_datetime(mut self, date: &str) -> Self {
         self.initial_date_time = Some(date.to_string());
         self
     }
 
     /// Adds a confirmation-dialogue to the form
+    #[must_use]
     pub fn confirm(mut self, confirm: Confirmation) -> Self {
         self.confirm = Some(confirm);
         self
     }
 
     /// Forces the element to be focused upon load
-    pub fn focus_on_load(mut self, focus: bool) -> Self {
+    #[must_use]
+    pub const fn focus_on_load(mut self, focus: bool) -> Self {
         self.focus_on_load = Some(focus);
         self
     }

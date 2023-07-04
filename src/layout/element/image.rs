@@ -1,4 +1,7 @@
-use super::*;
+use super::{
+    skip_serializing_none, Build, ContextElement, Debug, Deserialize, Element, SectionElement,
+    Serialize,
+};
 
 /// Represents an element of type `image`
 #[skip_serializing_none]
@@ -21,7 +24,8 @@ impl Default for Image {
     }
 }
 impl Image {
-    /// Creates a new [Image] element
+    /// Creates a new [`Image`] element
+    #[must_use]
     pub fn new(url: &str, alt_text: &str) -> Self {
         Self {
             image_url: url.to_string(),

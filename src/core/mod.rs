@@ -1,10 +1,13 @@
-use crate::pre::*;
+use crate::pre::{
+    block, comp, element, json, skip_serializing_none, user, view, Deserialize, ModalResponse,
+    Response, Serialize,
+};
 use std::fmt::{Display, Formatter};
 
-pub mod payload;
 pub mod parsing;
-pub mod response;
+pub mod payload;
 pub mod request;
+pub mod response;
 pub mod state;
 
 pub type BoltResult<T> = Result<T, Error>;
@@ -42,6 +45,9 @@ pub enum Error {
     /// Errors originating from slack-responses.
     Response(String, String),
 
+    /// Errors regarding state-values
+    State(String),
+
     /// Errors regarding users.
     User(String),
 
@@ -52,40 +58,43 @@ pub enum Error {
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            Error::Block(r#type, error) => {
+            Self::Block(r#type, error) => {
                 write!(f, "Block '{type}': {error}")
             }
-            Error::Building(r#type, error) => {
+            Self::Building(r#type, error) => {
                 write!(f, "Error during json-building type '{type}': {error}")
             }
-            Error::Conversation(error) => {
+            Self::Conversation(error) => {
                 write!(f, "Conversation-error: {error}")
             }
-            Error::Composition(r#type, error) => {
+            Self::Composition(r#type, error) => {
                 write!(f, "Composition '{type}': {error}")
             }
-            Error::Message(error) => {
+            Self::Message(error) => {
                 write!(f, "Message-error: {error}")
             }
-            Error::Element(r#type, error) => {
+            Self::Element(r#type, error) => {
                 write!(f, "Element '{type}': {error}")
             }
-            Error::File(error) => {
+            Self::File(error) => {
                 write!(f, "File-error: {error}")
             }
-            Error::Parsing(object, error) => {
+            Self::Parsing(object, error) => {
                 write!(f, "Parsing-error '{object}': {error}")
             }
-            Error::Response(expected, error) => {
+            Self::Response(expected, error) => {
                 write!(f, "Response-error (expected '{expected}'): {error}")
             }
-            Error::Request(error) => {
+            Self::Request(error) => {
                 write!(f, "Request-error: {error}")
             }
-            Error::User(error) => {
+            Self::State(error) => {
+                write!(f, "State-error: {error}")
+            }
+            Self::User(error) => {
                 write!(f, "User error: {error}")
             }
-            Error::View(error) => {
+            Self::View(error) => {
                 write!(f, "View error: {error}")
             }
         }
@@ -100,6 +109,12 @@ impl From<reqwest::Error> for Error {
 
 /// Used internally to build blocks to JSON.
 pub trait Build: Serialize {
+    /// Builds an object to JSON
+    ///
+    /// # Errors
+    ///
+    /// Errors will occur if the object is somehow un-serializeable.
+    ///
     fn build(&self) -> BoltResult<json::Value> {
         match json::to_value(self) {
             Ok(json) => Ok(json),

@@ -1,5 +1,7 @@
-use super::*;
-
+use super::{
+    skip_serializing_none, Build, Debug, Deserialize, DispatchActionConfig, Element, InputElement,
+    Plain, Serialize, Text,
+};
 
 /// Represents an element of type `email`
 #[skip_serializing_none]
@@ -28,6 +30,7 @@ impl InputElement for Email {}
 impl Element for Email {}
 impl Email {
     /// Creates a new [Email] element
+    #[must_use]
     pub fn new(action_id: &str) -> Self {
         Self {
             action_id: action_id.to_string(),
@@ -36,24 +39,28 @@ impl Email {
     }
 
     /// Sets the inital value for the field
+    #[must_use]
     pub fn initial_value(mut self, value: &str) -> Self {
         self.initial_value = Some(value.to_string());
         self
     }
 
     /// Provides a dispatch-action configuration to the element
+    #[must_use]
     pub fn dispatch_action_config(mut self, config: DispatchActionConfig) -> Self {
         self.dispatch_action_config = Some(config);
         self
     }
 
     /// Forces the element to be focused upon load
-    pub fn focus_on_load(mut self, focus: bool) -> Self {
+    #[must_use]
+    pub const fn focus_on_load(mut self, focus: bool) -> Self {
         self.focus_on_load = Some(focus);
         self
     }
 
     /// Adds placeholder-text to the field
+    #[must_use]
     pub fn placeholder(mut self, text: Text<Plain>) -> Self {
         self.placeholder = Some(text);
         self

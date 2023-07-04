@@ -1,12 +1,13 @@
 #[cfg(test)]
 mod test {
-    use crate::pre::*;
-    use block::{AsBlock, AsBlocks, Blocks};
-    use comp::Text;
-    use message::{AsMessage, Message};
-
+    use crate::pre::{
+        block::{self, AsBlock, AsBlocks, Blocks},
+        comp::Text,
+        element, json,
+        message::{AsMessage, Message},
+        BoltResult, Build,
+    };
     use json::json;
-    
 
     #[derive(Clone)]
     pub struct TestUser {
@@ -23,10 +24,10 @@ mod test {
         fn as_blocks(&self) -> BoltResult<Blocks> {
             let mut blocks = Blocks::new();
 
-            blocks.push(block::Header::new(Text::plain(self.name)))?;
+            blocks.push(&block::Header::new(Text::plain(self.name)))?;
 
             for u in &self.users {
-                blocks.push(u.as_block()?)?;
+                blocks.push(&u.as_block()?)?;
             }
 
             Ok(blocks)
@@ -38,18 +39,16 @@ mod test {
             Ok(block::Section::new()
                 .field(Text::mrkdwn(&format!("- Id: {}", self.id)).into())
                 .field(Text::mrkdwn(&format!("- Name: {}", self.name)).into())
-                .field(Text::mrkdwn(&format!("- Webpage: {}", self.url)).into())
-            )
+                .field(Text::mrkdwn(&format!("- Webpage: {}", self.url)).into()))
         }
     }
 
     impl AsMessage for TestList {
         fn as_message(&self) -> BoltResult<Message> {
-            Ok(message::Message::new()
+            Ok(Message::new()
                 .channel("XXXXXX")
                 .text("Test")
-                .blocks(self.as_blocks()?)
-            )
+                .blocks(self.as_blocks()?))
         }
     }
 
@@ -74,7 +73,7 @@ mod test {
     #[test]
     fn element_test() {
         let button = element::Button::new(Text::plain("Yeet"), "action_1");
-        let _block = block::Section::new().accessory(button).unwrap();
+        let _block = block::Section::new().accessory(&button).unwrap();
     }
 
     #[test]
@@ -172,7 +171,7 @@ mod test {
             })
         )
     }
-    
+
     #[test]
     fn messageable_simple() {
         let t = serde_json::to_value(get_test_types().2.as_message().unwrap()).unwrap();
@@ -240,10 +239,13 @@ mod test {
     fn block_ids() {
         let mut blocks = Blocks::new();
 
-        blocks.push(block::Actions::new().id("Action1")).unwrap();
-        blocks.push(block::Divider::new()).unwrap();
-        blocks.push(block::Section::new().id("Section1")).unwrap();
+        blocks.push(&block::Actions::new().id("Action1")).unwrap();
+        blocks.push(&block::Divider::new()).unwrap();
+        blocks.push(&block::Section::new().id("Section1")).unwrap();
 
-        assert_eq!(blocks.ids(), vec!["Action1".to_string(), "Section1".to_string()])
+        assert_eq!(
+            blocks.ids(),
+            vec!["Action1".to_string(), "Section1".to_string()]
+        )
     }
 }

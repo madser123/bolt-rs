@@ -6,8 +6,8 @@ mod tests;
 #[cfg(feature = "client")]
 pub mod app;
 
-pub mod core;
 pub mod conversation;
+pub mod core;
 pub mod file;
 pub mod layout;
 pub mod message;
@@ -17,16 +17,6 @@ pub mod view;
 #[cfg(feature = "client")]
 pub use app::App;
 
-pub use layout::{
-    block,
-    comp as composition,
-    element,
-};
+pub use layout::{block, comp as composition, element};
 
-pub use crate::core::{
-    Error,
-    BoltResult,
-    request::Request,
-    response::Response,
-    payload,
-};
+pub use crate::core::{payload, request::Request, response::Response, BoltResult, Error};

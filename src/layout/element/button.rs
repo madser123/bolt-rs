@@ -1,6 +1,9 @@
-use super::*;
+use super::{
+    skip_serializing_none, ActionsElement, Build, Confirmation, Debug, Deserialize, Element, Plain,
+    SectionElement, Serialize, Style, Text,
+};
 
-/// Represents an element of type `button`
+/// Represents an element of type `button`s
 #[skip_serializing_none]
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct Button {
@@ -31,7 +34,8 @@ impl Default for Button {
     }
 }
 impl Button {
-    /// Creates a new [Button] element
+    /// Creates a new [`Button`] element
+    #[must_use]
     pub fn new(text: Text<Plain>, action_id: &str) -> Self {
         Self {
             text,
@@ -41,30 +45,35 @@ impl Button {
     }
 
     /// Sets a url that is opened upon clicking the button
+    #[must_use]
     pub fn url(mut self, url: &str) -> Self {
         self.url = Some(url.to_string());
         self
     }
 
     /// Sets the value to be returned to the app when interacting with the button.
+    #[must_use]
     pub fn value(mut self, value: &str) -> Self {
         self.value = Some(value.to_string());
         self
     }
 
     /// Sets the [Style] of the button
-    pub fn style(mut self, style: Style) -> Self {
+    #[must_use]
+    pub fn style(mut self, style: &Style) -> Self {
         self.style = Some(style.to_string());
         self
     }
 
     /// Adds a confirmation dialogue that appears when the button has been pressed.
+    #[must_use]
     pub fn confirm(mut self, confirm: Confirmation) -> Self {
         self.confirm = Some(confirm);
         self
     }
 
     /// Adds an accessibility label that appears when hovering over the button.
+    #[must_use]
     pub fn accessibility_label(mut self, label: &str) -> Self {
         self.accessibility_label = Some(label.to_string());
         self

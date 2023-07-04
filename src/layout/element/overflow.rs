@@ -1,4 +1,7 @@
-use super::*;
+use super::{
+    option, skip_serializing_none, ActionsElement, Build, Confirmation, Debug, Deserialize,
+    Element, Plain, SectionElement, Serialize,
+};
 
 /// Creates a new [Overflow] element with static options.
 #[skip_serializing_none]
@@ -6,7 +9,7 @@ use super::*;
 pub struct Overflow {
     r#type: String,
     action_id: String,
-    options: Vec<OptionObject<Plain>>,
+    options: Vec<option::Object<Plain>>,
     confirm: Option<Confirmation>,
 }
 impl SectionElement for Overflow {}
@@ -24,7 +27,8 @@ impl Default for Overflow {
 }
 impl Overflow {
     /// Creates a new [Overflow] element
-    pub fn new(action_id: &str, options: Vec<OptionObject<Plain>>) -> Self {
+    #[must_use]
+    pub fn new(action_id: &str, options: Vec<option::Object<Plain>>) -> Self {
         Self {
             action_id: action_id.to_string(),
             options,
@@ -33,6 +37,7 @@ impl Overflow {
     }
 
     /// Adds a confirmation-dialogue to the field
+    #[must_use]
     pub fn confirm(mut self, confirm: Confirmation) -> Self {
         self.confirm = Some(confirm);
         self

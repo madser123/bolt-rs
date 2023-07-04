@@ -1,5 +1,7 @@
-use super::*;
-use element::ContextElement;
+use super::{
+    element::ContextElement, json, skip_serializing_none, Block, BoltResult, Build, Debug,
+    Deserialize, Serialize,
+};
 
 /// A block of type `context`
 #[skip_serializing_none]
@@ -21,11 +23,17 @@ impl Default for Context {
 }
 impl Context {
     /// Creates a new [Context] block
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
 
     /// Pushes multiple elements to the context
+    ///
+    /// # Errors
+    ///
+    /// An error will occur if one or more the supplied elements fails serializing.
+    ///
     pub fn elements(mut self, elements: &mut Vec<impl ContextElement>) -> BoltResult<Self> {
         for e in elements {
             self.elements.push(e.build()?);
@@ -34,12 +42,18 @@ impl Context {
     }
 
     /// Pushes a single element to the context
-    pub fn element(mut self, element: impl ContextElement) -> BoltResult<Self> {
+    ///
+    /// # Errors
+    ///
+    /// An error will occur if the supplied element fails serializing.
+    ///
+    pub fn element(mut self, element: &impl ContextElement) -> BoltResult<Self> {
         self.elements.push(element.build()?);
         Ok(self)
     }
 
     /// Add a block-id
+    #[must_use]
     pub fn id(mut self, id: &str) -> Self {
         self.block_id = Some(id.to_string());
         self

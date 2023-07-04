@@ -1,5 +1,7 @@
-use super::*;
-use comp::{Text, Plain};
+use super::{
+    comp::{Plain, Text},
+    skip_serializing_none, Block, Build, Debug, Deserialize, Serialize,
+};
 
 /// A block of type `image`
 #[skip_serializing_none]
@@ -25,6 +27,7 @@ impl Default for Image {
 }
 impl Image {
     /// Creates a new [Image] block
+    #[must_use]
     pub fn new(url: &str, alt_text: &str) -> Self {
         Self {
             image_url: url.to_string(),
@@ -34,12 +37,14 @@ impl Image {
     }
 
     /// Add a title
+    #[must_use]
     pub fn title(mut self, text: Text<Plain>) -> Self {
         self.title = Some(text);
         self
     }
 
     /// Add a block-id
+    #[must_use]
     pub fn id(mut self, id: &str) -> Self {
         self.block_id = Some(id.to_string());
         self

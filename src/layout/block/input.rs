@@ -1,7 +1,8 @@
-use super::*;
-use element::{Element, InputElement};
-use comp::{Text, Plain};
-
+use super::{
+    comp::{Plain, Text},
+    element::{Element, InputElement},
+    skip_serializing_none, Block, Build, Serialize,
+};
 /// A block of type `input`
 #[skip_serializing_none]
 #[derive(Serialize)]
@@ -29,26 +30,30 @@ impl<E: InputElement> Input<E> {
         }
     }
 
-    /// Sets the input to dispatch a block_actions payload after submission.
-    pub fn dispatch_action(mut self) -> Self {
+    /// Sets the input to dispatch a `block_actions` payload after submission.
+    #[must_use]
+    pub const fn dispatch_action(mut self) -> Self {
         self.dispatch_action = Some(true);
         self
     }
 
     /// Add a block-id
+    #[must_use]
     pub fn id(mut self, id: &str) -> Self {
         self.block_id = Some(id.to_string());
         self
     }
 
     /// Add a hint to the user.
+    #[must_use]
     pub fn hint(mut self, hint: Text<Plain>) -> Self {
         self.hint = Some(hint);
         self
     }
 
     /// Sets the input to be optional.
-    pub fn optional(mut self) -> Self {
+    #[must_use]
+    pub const fn optional(mut self) -> Self {
         self.optional = Some(true);
         self
     }

@@ -1,10 +1,7 @@
-use super::*;
-use std::fmt::Display;
+use super::json;
+use axum::{http::StatusCode, response::IntoResponse};
 use colored::Colorize;
-use axum::{
-    response::IntoResponse,
-    http::StatusCode,
-};
+use std::fmt::Display;
 
 /// A bolt-rs App-related error
 pub enum Error {
@@ -13,7 +10,6 @@ pub enum Error {
 
     /// Problems regarding Authentification of incoming requests.
     Authentication(String),
-
 
     /// Errors relating to `block-actions` interactions from slack.
     BlockAction(String),
@@ -46,31 +42,31 @@ impl Display for Error {
             Self::Parsing(error) => {
                 let banner = "[ERROR][Parsing]".red();
                 write!(f, "{banner} {error}")
-            },
+            }
             Self::Authentication(error) => {
                 let banner = "[ERROR][Authentication]".red();
                 write!(f, "{banner} {error}")
-            },
+            }
             Self::BlockAction(error) => {
                 let banner = "[ERROR][BlockAction]".red();
                 write!(f, "{banner} {error}")
-            },
+            }
             Self::MessageAction(error) => {
                 let banner = "[ERROR][MessageAction]".red();
                 write!(f, "{banner} {error}")
-            },
+            }
             Self::Shortcut(error) => {
                 let banner = "[ERROR][Shortcut]".red();
                 write!(f, "{banner} {error}")
-            },
+            }
             Self::ViewClosed(error) => {
                 let banner = "[ERROR][ViewClosed]".red();
                 write!(f, "{banner} {error}")
-            },
+            }
             Self::ViewSubmission(error) => {
                 let banner = "[ERROR][ViewSubmission]".red();
                 write!(f, "{banner} {error}")
-            },
+            }
         }
     }
 }

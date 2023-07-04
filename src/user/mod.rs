@@ -1,4 +1,4 @@
-use crate::pre::*;
+use crate::pre::{skip_serializing_none, BoltResult, Deserialize, Request, Serialize};
 
 #[skip_serializing_none]
 #[derive(Deserialize, Serialize, Clone, Debug)]
@@ -51,7 +51,7 @@ pub struct User {
 
 #[skip_serializing_none]
 #[derive(Deserialize, Serialize, Clone, Debug)]
-pub struct UserList(Vec<User>);
+pub struct List(Vec<User>);
 
 #[skip_serializing_none]
 #[derive(Deserialize, Serialize, Clone, Debug)]
@@ -60,32 +60,36 @@ pub struct Team {
     pub domain: String,
 }
 
-impl UserList {
+impl List {
     /// Gets a complete list of users from slack
+    ///
+    /// # Errors
+    ///
+    /// An error will occur if the request fails to be sent or if slack reports any errors back.
     pub async fn new(token: &str) -> BoltResult<Self> {
-        Request::post("users.list", token)
-            .send()
-            .await?
-            .unpack()
+        Request::post("users.list", token).send().await?.unpack()
     }
 
     /// Gets a specific user at an index
+    #[must_use]
     pub fn get(&self, index: usize) -> Option<&User> {
         self.0.get(index)
     }
 
     /// Returns the amount of users in the list
+    #[must_use]
     pub fn len(&self) -> usize {
         self.0.len()
     }
 
     /// Checks wether or not the list is empty
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
 }
 
-impl std::iter::IntoIterator for UserList {
+impl std::iter::IntoIterator for List {
     type Item = User;
     type IntoIter = <Vec<User> as IntoIterator>::IntoIter;
 
@@ -96,6 +100,11 @@ impl std::iter::IntoIterator for UserList {
 
 impl User {
     /// Gets a user from a slack-id
+    ///
+    /// # Errors
+    ///
+    /// An error will occur if the request fails to be sent, or if slack reports any errors back.
+    ///
     pub async fn from_id(token: &str, id: &str) -> BoltResult<Self> {
         Request::get(&format!("users.info?user={id}"), token)
             .send()
@@ -104,6 +113,11 @@ impl User {
     }
 
     /// Gets a user from an email
+    ///
+    /// # Errors
+    ///
+    /// An error will occur if the request fails to be sent, or if slack reports any errors back.
+    ///
     pub async fn from_email(token: &str, email: &str) -> BoltResult<Self> {
         Request::get(&format!("users.lookupByEmail?email={email}"), token)
             .send()

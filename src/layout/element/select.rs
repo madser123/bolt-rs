@@ -1,4 +1,8 @@
-use super::*;
+use super::{
+    option, skip_serializing_none, ActionsElement, Build, Confirmation, ConversationList, Debug,
+    Deserialize, Element, ExternalData, Filter, InputElement, Menu, Plain, PublicChannels,
+    SectionElement, Serialize, StaticOptions, Text, UserList,
+};
 
 #[skip_serializing_none]
 #[derive(Deserialize, Serialize, Debug, Clone, Default)]
@@ -12,10 +16,10 @@ pub struct Select<M: Menu = StaticOptions> {
     focus_on_load: Option<bool>,
     placeholder: Option<Text<Plain>>,
 
-    options: Option<Vec<OptionObject<Plain>>>,
-    option_groups: Option<Vec<OptionGroup>>,
+    options: Option<Vec<option::Object<Plain>>>,
+    option_groups: Option<Vec<option::Group>>,
 
-    initial_option: Option<OptionObject<Plain>>,
+    initial_option: Option<option::Object<Plain>>,
 
     min_query_length: Option<i64>,
 
@@ -29,12 +33,10 @@ pub struct Select<M: Menu = StaticOptions> {
     initial_channel: Option<String>,
 }
 impl Select {
-    /// Creates a new [Select] element with static options.
-    pub fn static_options(
-        action_id: &str,
-        options: Vec<OptionObject<Plain>>,
-    ) -> Select<StaticOptions> {
-        Select::<StaticOptions> {
+    /// Creates a new [`Select`] element with static options.
+    #[must_use]
+    pub fn static_options(action_id: &str, options: Vec<option::Object<Plain>>) -> Self {
+        Self {
             r#type: "static_select".to_string(),
             action_id: action_id.to_string(),
             options: Some(options),
@@ -42,9 +44,10 @@ impl Select {
         }
     }
 
-    /// Creates a new [Select] element with external-data
-    pub fn external_data(action_id: &str) -> Select<ExternalData> {
-        Select::<ExternalData> {
+    /// Creates a new [`Select`] element with external-data
+    #[must_use]
+    pub fn external_data(action_id: &str) -> Self {
+        Self {
             r#type: "external_select".to_string(),
             action_id: action_id.to_string(),
             ..Default::default()
@@ -52,8 +55,9 @@ impl Select {
     }
 
     /// Creates a new [Select] element with a user-list.
-    pub fn user_list(action_id: &str) -> Select<UserList> {
-        Select::<UserList> {
+    #[must_use]
+    pub fn user_list(action_id: &str) -> Self {
+        Self {
             r#type: "users_select".to_string(),
             action_id: action_id.to_string(),
             ..Default::default()
@@ -61,8 +65,9 @@ impl Select {
     }
 
     /// Creates a new [Select] element with a conversation-list.
-    pub fn conversation_list(action_id: &str) -> Select<ConversationList> {
-        Select::<ConversationList> {
+    #[must_use]
+    pub fn conversation_list(action_id: &str) -> Self {
+        Self {
             r#type: "conversations_select".to_string(),
             action_id: action_id.to_string(),
             ..Default::default()
@@ -70,8 +75,9 @@ impl Select {
     }
 
     /// Creates a new [Select] element with a public-channels list.
-    pub fn public_channels(action_id: &str) -> Select<PublicChannels> {
-        Select::<PublicChannels> {
+    #[must_use]
+    pub fn public_channels(action_id: &str) -> Self {
+        Self {
             r#type: "channels_select".to_string(),
             action_id: action_id.to_string(),
             ..Default::default()
@@ -83,18 +89,21 @@ where
     Self: Element,
 {
     /// Applies confirmation to the element
+    #[must_use]
     pub fn confirm(mut self, confirm: Confirmation) -> Self {
         self.confirm = Some(confirm);
         self
     }
 
     /// Sets the element to be focused on load.
-    pub fn focus_on_load(mut self, focus: bool) -> Self {
+    #[must_use]
+    pub const fn focus_on_load(mut self, focus: bool) -> Self {
         self.focus_on_load = Some(focus);
         self
     }
 
     /// Sets the placeholder-text for the element.
+    #[must_use]
     pub fn placeholder(mut self, text: Text<Plain>) -> Self {
         self.placeholder = Some(text);
         self
@@ -102,32 +111,37 @@ where
 }
 impl Select<StaticOptions> {
     /// Groups the options into sections that the user can see
-    pub fn option_groups(mut self, groups: Vec<OptionGroup>) -> Self {
+    #[must_use]
+    pub fn option_groups(mut self, groups: Vec<option::Group>) -> Self {
         self.option_groups = Some(groups);
         self
     }
 
     /// Sets the initial option selected
-    pub fn initial_option(mut self, option: OptionObject<Plain>) -> Self {
+    #[must_use]
+    pub fn initial_option(mut self, option: option::Object<Plain>) -> Self {
         self.initial_option = Some(option);
         self
     }
 }
 impl Select<ExternalData> {
     /// Sets the minimum query-length allowed
-    pub fn min_query_length(mut self, length: i64) -> Self {
+    #[must_use]
+    pub const fn min_query_length(mut self, length: i64) -> Self {
         self.min_query_length = Some(length);
         self
     }
 
     /// Sets the initial option selected
-    pub fn initial_option(mut self, option: OptionObject<Plain>) -> Self {
+    #[must_use]
+    pub fn initial_option(mut self, option: option::Object<Plain>) -> Self {
         self.initial_option = Some(option);
         self
     }
 }
 impl Select<UserList> {
     /// Sets the initial user selected
+    #[must_use]
     pub fn initial_user(mut self, user: String) -> Self {
         self.initial_user = Some(user);
         self
@@ -135,38 +149,44 @@ impl Select<UserList> {
 }
 impl Select<ConversationList> {
     /// Sets the initial conversation selected
+    #[must_use]
     pub fn initial_conversation(mut self, conversation: String) -> Self {
         self.initial_conversation = Some(conversation);
         self
     }
 
     /// Sets the initial conversation selected to be the current one.
-    pub fn default_to_current(mut self) -> Self {
+    #[must_use]
+    pub const fn default_to_current(mut self) -> Self {
         self.default_to_current_conversation = Some(true);
         self
     }
 
     /// Applies a filter to the conversation-list.
+    #[must_use]
     pub fn filter(mut self, filter: Filter) -> Self {
         self.filter = Some(filter);
         self
     }
 
     /// Enables a response-url for the element
-    pub fn enable_response_url(mut self) -> Self {
+    #[must_use]
+    pub const fn enable_response_url(mut self) -> Self {
         self.response_url_enabled = Some(true);
         self
     }
 }
 impl Select<PublicChannels> {
     /// Sets the initial channel selected.
+    #[must_use]
     pub fn initial_channel(mut self, channel: String) -> Self {
         self.initial_channel = Some(channel);
         self
     }
 
     /// Enables a response-url for the element
-    pub fn enable_response_url(mut self) -> Self {
+    #[must_use]
+    pub const fn enable_response_url(mut self) -> Self {
         self.response_url_enabled = Some(true);
         self
     }

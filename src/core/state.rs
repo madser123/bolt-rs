@@ -1,4 +1,4 @@
-use super::*;
+use super::{BoltResult, Deserialize, Error, Serialize};
 use std::collections::HashMap;
 
 /// A state-object from Slack.
@@ -17,15 +17,15 @@ pub struct Value {
     pub value: Option<String>,
 }
 
-
 impl State {
     /// Tries to extract the value from a specified state-object.
-    pub fn get_value(&self, block_id: &str, action_id: &str) -> Result<&String, String> {
-        let block = match self.values.get(block_id) {
-            Some(b) => b,
-            None => {
-                return Err(format!("Couldn't get state value of block: '{block_id}'"))
-            }
+    ///
+    /// # Errors
+    ///
+    /// Errors will occur if the requested state is not found.
+    pub fn get_value(&self, block_id: &str, action_id: &str) -> BoltResult<&String> {
+        let Some(block) = self.values.get(block_id) else {
+            return Err(Error::State(format!("Couldn't get state value of block: '{block_id}'")))
         };
 
         if let Some(value) = block.get(action_id) {
@@ -34,6 +34,8 @@ impl State {
             }
         }
 
-        Err(format!("Couldn't get state value of block: '{block_id}' action: '{action_id}'"))
+        Err(Error::State(format!(
+            "Couldn't get state value of block: '{block_id}' action: '{action_id}'"
+        )))
     }
 }

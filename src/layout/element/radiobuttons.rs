@@ -1,12 +1,15 @@
-use super::*;
+use super::{
+    option, skip_serializing_none, ActionsElement, Build, Confirmation, Debug, Deserialize,
+    Element, InputElement, SectionElement, Serialize,
+};
 
 #[skip_serializing_none]
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct RadioButtons {
     r#type: String,
     action_id: String,
-    options: Vec<OptionObject>,
-    initial_option: Option<OptionObject>,
+    options: Vec<option::Object>,
+    initial_option: Option<option::Object>,
     confirm: Option<Confirmation>,
     focus_on_load: Option<bool>,
 }
@@ -27,8 +30,9 @@ impl Default for RadioButtons {
     }
 }
 impl RadioButtons {
-    /// Creates a new [RadioButtons] element.
-    pub fn new(action_id: &str, options: Vec<OptionObject>) -> Self {
+    /// Creates a new [`RadioButtons`] element.
+    #[must_use]
+    pub fn new(action_id: &str, options: Vec<option::Object>) -> Self {
         Self {
             action_id: action_id.to_string(),
             options,
@@ -37,19 +41,22 @@ impl RadioButtons {
     }
 
     /// Sets the initial options selected
-    pub fn initial_option(mut self, option: OptionObject) -> Self {
+    #[must_use]
+    pub fn initial_option(mut self, option: option::Object) -> Self {
         self.initial_option = Some(option);
         self
     }
 
     /// Applies confirmation to the element
+    #[must_use]
     pub fn confirm(mut self, confirm: Confirmation) -> Self {
         self.confirm = Some(confirm);
         self
     }
 
     /// Sets the element to be focused on load.
-    pub fn focus_on_load(mut self) -> Self {
+    #[must_use]
+    pub const fn focus_on_load(mut self) -> Self {
         self.focus_on_load = Some(true);
         self
     }

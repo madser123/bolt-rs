@@ -1,6 +1,8 @@
-use super::*;
-use block::{Actions, Input, Section};
-use comp::*;
+use super::{
+    block::{Actions, Input, Section},
+    comp::{option, Any, Confirmation, DispatchActionConfig, Filter, Plain, Text},
+    json, skip_serializing_none, BoltResult, Build, Debug, Deserialize, Serialize, Style,
+};
 
 mod button;
 mod checkboxes;
@@ -30,43 +32,68 @@ pub use self::plaintext::PlainTextInput;
 pub use self::radiobuttons::RadioButtons;
 pub use self::select::Select;
 pub use self::timepicker::TimePicker;
-pub use self::url::UrlInput;
+pub use self::url::Url;
 
 pub trait Element: Build {}
 
 /// Converts any type into a list of elements
 pub trait AsElements {
     /// Turns `self` into a list of `Elements`
+    ///
+    /// # Errors
+    ///
+    /// An error should occur if the elements fails serializing.
+    ///
     fn as_elements(&self) -> BoltResult<Elements>;
 }
 
 /// Converts any type into a single element
+#[allow(clippy::module_name_repetitions)]
 pub trait AsElement<E> {
     /// Turns `self` into an `Element` of type `T`
+    ///
+    /// # Errors
+    ///
+    /// An error should occur if the element fails serializing.
+    ///
     fn as_element(&self) -> BoltResult<E>;
 }
 
 /// Convert elements into Section accessories
+#[allow(clippy::module_name_repetitions)]
 pub trait SectionElement: Element
 where
     Self: Sized,
 {
+    /// Converts this element into a section-accessory.
+    ///
+    /// # Errors
+    ///
+    /// An error will occur if the element fails to serialize.
+    ///
     fn into_section_as_accessory(self) -> BoltResult<Section> {
-        Section::new().accessory(self)
+        Section::new().accessory(&self)
     }
 }
 
 /// Convert elements into action-elements
+#[allow(clippy::module_name_repetitions)]
 pub trait ActionsElement: Element
 where
     Self: Sized,
 {
+    /// Converts this element into an action-block, with this in the elements.
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if .
     fn into_actions(self) -> BoltResult<Actions> {
         Actions::new().elements(vec![self])
     }
 }
 
 /// Convert elements into inputs
+#[allow(clippy::module_name_repetitions)]
 pub trait InputElement: Element
 where
     Self: Sized,
@@ -77,6 +104,7 @@ where
 }
 
 /// Needed when using elements in contexts
+#[allow(clippy::module_name_repetitions)]
 pub trait ContextElement: Element {}
 
 /// A collection of elements
@@ -85,17 +113,28 @@ pub struct Elements(Vec<json::Value>);
 
 impl Elements {
     /// Creates a new empty list of elements
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
 
     /// Pushes an element onto the list
+    ///
+    /// # Errors
+    ///
+    /// An error will occur if the supplied element fails serializing.
+    ///
     pub fn push(&mut self, element: &impl Element) -> BoltResult<()> {
         self.0.push(element.build()?);
         Ok(())
     }
 
     /// Appends a list of elements to the list
+    ///
+    /// # Errors
+    ///
+    /// An error will occur if one or more of the supplied elements fails serializing.
+    ///
     pub fn append(&mut self, elements: &mut Vec<impl Element>) -> BoltResult<()> {
         for e in elements {
             self.push(e)?;
@@ -104,6 +143,7 @@ impl Elements {
     }
 
     /// Output as a list of json values
+    #[must_use]
     pub fn json(self) -> Vec<json::Value> {
         self.0
     }

@@ -1,8 +1,10 @@
-use crate::pre::*;
-use reqwest::multipart::Form;
-use message::{Message, AsMessage};
+use crate::pre::{
+    block, element, message, skip_serializing_none, BoltResult, Deserialize, Request, Serialize,
+};
 use block::Blocks;
 use element::Elements;
+use message::{AsMessage, Message};
+use reqwest::multipart::Form;
 
 /// A slack-conversation
 #[skip_serializing_none]
@@ -23,52 +25,67 @@ pub struct Conversation {
 
 impl Conversation {
     /// Returns a default [Starter] which can be used to open a conversation.
+    #[must_use]
     pub fn open_new() -> Starter {
         Starter::default()
     }
 
     /// Returns a new [Starter] with a user assigned to it.
+    #[must_use]
     pub fn user(user: &str) -> Starter {
         Starter::default().add_user(user)
     }
 
     /// Returns a new [Starter] with a channel assigned to it.
+    #[must_use]
     pub fn channel(channel: &str) -> Starter {
         Starter::default().channel(channel)
     }
 
     /// Updates the current conversation.
+    ///
+    /// # Errors
+    ///
+    /// Errors will occur if the request can't be sent, or if slack rejects it because of formatting or the likes.
+    ///
     pub async fn update(self, token: &str) -> BoltResult<Self> {
         Request::post("conversations.join", token)
-            .multipart(Form::new()
-                .text("channel", self.id)    
-            )
+            .multipart(Form::new().text("channel", self.id))
             .send()
             .await?
             .unpack()
     }
 
     /// Sends normal text to the opened conversation.
+    ///
+    /// # Errors
+    ///
+    /// Errors will occur if the request can't be sent, or if slack rejects it because of formatting or the likes.
+    ///
     pub async fn send_text(self, text: &str, token: &str) -> BoltResult<Self> {
-        self.as_message()?
-            .text(text)
-            .post(token)
-            .await?;
+        self.as_message()?.text(text).post(token).await?;
 
         self.update(token).await
     }
 
     /// Sends blocks to the opened conversation.
+    ///
+    /// # Errors
+    ///
+    /// Errors will occur if the request can't be sent, or if slack rejects it because of formatting or the likes.
+    ///
     pub async fn send_blocks(self, blocks: Blocks, token: &str) -> BoltResult<Self> {
-        self.as_message()?
-            .blocks(blocks)
-            .post(token)
-            .await?;
+        self.as_message()?.blocks(blocks).post(token).await?;
 
         self.update(token).await
     }
 
     /// Sends attachments to the opened conversation.
+    ///
+    /// # Errors
+    ///
+    /// Errors will occur if the request can't be sent, or if slack rejects it because of formatting or the likes.
+    ///
     pub async fn send_attachments(self, attachments: Elements, token: &str) -> BoltResult<Self> {
         self.as_message()?
             .attachments(attachments)
@@ -98,6 +115,11 @@ pub struct Starter {
 
 impl Starter {
     /// Sends this starter to slack and returns the joined conversation.
+    ///
+    /// # Errors
+    ///
+    /// Errors will occur if the request can't be sent, or if slack rejects it because of formatting or the likes.
+    ///
     pub async fn start(self, token: &str) -> BoltResult<Conversation> {
         Request::post("conversations.open", token)
             .json(&self)
@@ -119,13 +141,15 @@ impl Starter {
     }
 
     /// TODO
-    pub fn return_im(mut self, im: bool) -> Self {
+    #[must_use]
+    pub const fn return_im(mut self, im: bool) -> Self {
         self.return_im = Some(im);
         self
     }
 
     /// TODO
-    pub fn prevent_creation(mut self, prevent: bool) -> Self {
+    #[must_use]
+    pub const fn prevent_creation(mut self, prevent: bool) -> Self {
         self.prevent_creation = Some(prevent);
         self
     }

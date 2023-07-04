@@ -1,42 +1,37 @@
-use std::{collections::HashMap, net::SocketAddr, sync::Arc};
 use axum::http::HeaderMap;
+use colored::Colorize;
 use futures::{future::BoxFuture, Future};
 use serde::de::DeserializeOwned;
 use serde_json as json;
-use colored::Colorize;
+use std::{collections::HashMap, net::SocketAddr, sync::Arc};
 
 mod auth;
 mod error;
 
+pub use crate::payload::{BlockAction, MessageAction, Shortcut, ViewClosed, ViewSubmission};
+pub use auth::Auth;
 pub(crate) use error::Error;
 
-pub use auth::Auth;
-pub use crate::payload::{
-    BlockAction,
-    MessageAction,
-    Shortcut,
-    ViewClosed,
-    ViewSubmission,
-};
-
 /// A result from a bolt-rs App.
+#[allow(clippy::module_name_repetitions)]
 pub type AppResult<T> = Result<T, Error>;
 
 /// A collection of closures
-type Interactions<T> = HashMap<String, Box<dyn Fn(T) -> BoxFuture<'static, AppResult<()>> + Send + Sync>>;
+type Interactions<T> =
+    HashMap<String, Box<dyn Fn(T) -> BoxFuture<'static, AppResult<()>> + Send + Sync>>;
 
 /// Defines behaviour for an interaction.
-/// 
+///
 /// The identifier-functions help find the correct closure for the interaction.
 /// The error-function is used to define the error-type that the interaction should return.
 pub(crate) trait Interaction: DeserializeOwned {
     fn identifier(&self) -> String;
     fn identifier_name() -> String;
-    fn error(message: String) -> crate::app::Error; 
+    fn error(message: String) -> crate::app::Error;
 }
 
 /// The logging "system" for slack-rs.
-/// 
+///
 /// This trait is used internally to streamline the logging output.
 pub(crate) trait Logger {
     /// Should the name of the object the logger trait is attached to
@@ -90,6 +85,7 @@ impl Logger for App {
 
 impl App {
     /// Creates a new app.
+    #[must_use]
     pub fn new(auth: Auth) -> Self {
         Self {
             auth,
@@ -99,17 +95,21 @@ impl App {
 
     /// Sets the desired socket-address for the App to serve/listen on.
     /// Default is `0.0.0.0:8000`
-    pub fn address(mut self, addr: SocketAddr) -> Self {
+    #[must_use]
+    pub const fn address(mut self, addr: SocketAddr) -> Self {
         self.address = addr;
         self
     }
 
     /// Handles incoming interactions.
-    async fn handle_interaction<T: Interaction>(closures: Arc<Interactions<T>>, interaction: String) -> AppResult<()> {
+    async fn handle_interaction<T: Interaction + Send>(
+        closures: Arc<Interactions<T>>,
+        interaction: String,
+    ) -> AppResult<()> {
         // Parse interaction
         let interaction = match json::from_str::<T>(&interaction) {
             Ok(i) => i,
-            Err(error) => return Err(T::error(format!("Tried to parse JSON to struct: {error}")))
+            Err(error) => return Err(T::error(format!("Tried to parse JSON to struct: {error}"))),
         };
 
         // Get identifier
@@ -118,11 +118,19 @@ impl App {
         // Get and run closure
         match closures.get(&identifier) {
             Some(closure) => closure(interaction).await,
-            None => Err(T::error(format!("Unknown {}: '{}'", T::identifier_name(), identifier)))
+            None => Err(T::error(format!(
+                "Unknown {}: '{}'",
+                T::identifier_name(),
+                identifier
+            ))),
         }
     }
 
     /// Creates the app and starts serving/listening on the configured address.
+    ///
+    /// # Panics
+    ///
+    /// Panics will occur if crucial information is missing such as the client-secret.
     pub async fn start(self) {
         // Check for warnings
         self.run_pre_startup_checks();
@@ -135,39 +143,47 @@ impl App {
         let view_submissions = Arc::new(self.view_submissions);
 
         // HANDLER: Interactions
-        let interaction_handler = move | headers: HeaderMap, body: String | async move {
+        let interaction_handler = move |headers: HeaderMap, body: String| async move {
             // Sanitize payload
-            let payload = self.auth.sanitize_payload(&body, headers)?;
-            
+            let payload = self.auth.sanitize_payload(&body, &headers)?;
+
             // Parse json
             let json: json::Map<String, json::Value> = json::from_str(&payload)?;
 
             // Get type
             let r#type = match json.get("type") {
                 Some(t) => t.to_string().replace('"', ""),
-                None => return Err(Error::Parsing("Received new interaction without a type!".to_string())),
+                None => {
+                    return Err(Error::Parsing(
+                        "Received new interaction without a type!".to_string(),
+                    ))
+                }
             };
-            
+
             Self::log(&format!("Recieved a new '{type}' interaction"));
 
             // Match type of interaction to handle
             match r#type.as_str() {
-                "block_actions" 
-                | "interactive_message" => Self::handle_interaction(block_actions, payload).await?,
-                "message_action"        => Self::handle_interaction(message_actions, payload).await?,
-                "shortcut"              => Self::handle_interaction(shortcuts, payload).await?,
-                "view_closed"           => Self::handle_interaction(view_closes, payload).await?,
-                "view_submission"       => Self::handle_interaction(view_submissions, payload).await?,
+                "block_actions" | "interactive_message" => {
+                    Self::handle_interaction(block_actions, payload).await?
+                }
+                "message_action" => Self::handle_interaction(message_actions, payload).await?,
+                "shortcut" => Self::handle_interaction(shortcuts, payload).await?,
+                "view_closed" => Self::handle_interaction(view_closes, payload).await?,
+                "view_submission" => Self::handle_interaction(view_submissions, payload).await?,
 
-                t => return Err(Error::Parsing(format!("'{t}' is not a known interaction type!"))),
+                t => {
+                    return Err(Error::Parsing(format!(
+                        "'{t}' is not a known interaction type!"
+                    )))
+                }
             };
 
             Ok(())
         };
 
         // Setup routes
-        let router = axum::Router::new()
-            .route("/", axum::routing::post(interaction_handler));
+        let router = axum::Router::new().route("/", axum::routing::post(interaction_handler));
 
         // Create server
         let server = axum::Server::bind(&self.address);
@@ -178,7 +194,7 @@ impl App {
         server
             .serve(router.into_make_service())
             .await
-            .unwrap();
+            .expect("Server crashed");
     }
 
     /// Checks basic requirements before serving/listening.
@@ -187,6 +203,7 @@ impl App {
     }
 
     /// Adds a block-actions handler to the app.
+    #[must_use]
     pub fn block_actions<F, Fut>(mut self, action_id: &str, cb: F) -> Self
     where
         Fut: Future<Output = AppResult<()>> + Send + 'static,
@@ -200,6 +217,7 @@ impl App {
     }
 
     /// Adds a message-actions handler to the app.
+    #[must_use]
     pub fn message_actions<F, Fut>(mut self, callback_id: &str, cb: F) -> Self
     where
         Fut: Future<Output = AppResult<()>> + Send + 'static,
@@ -213,6 +231,7 @@ impl App {
     }
 
     /// Adds a shortcut handler to the app.
+    #[must_use]
     pub fn shortcut<F, Fut>(mut self, callback_id: &str, cb: F) -> Self
     where
         Fut: Future<Output = AppResult<()>> + Send + 'static,
@@ -226,6 +245,7 @@ impl App {
     }
 
     /// Adds a view-closed handler to the app.
+    #[must_use]
     pub fn view_close<F, Fut>(mut self, callback_id: &str, cb: F) -> Self
     where
         Fut: Future<Output = AppResult<()>> + Send + 'static,
@@ -239,6 +259,7 @@ impl App {
     }
 
     /// Adds a view-submission handler to the app.
+    #[must_use]
     pub fn view_submission<F, Fut>(mut self, callback_id: &str, cb: F) -> Self
     where
         Fut: Future<Output = AppResult<()>> + Send + 'static,

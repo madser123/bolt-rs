@@ -1,13 +1,8 @@
 use std::net::SocketAddr;
 
 use bolt_rs::{
-    App,
-    app::{
-        Auth,
-        Shortcut,
-        AppResult,
-    },
-    user,
+    app::{AppResult, Auth, Shortcut},
+    user, App,
 };
 use serde_json::json;
 
@@ -20,8 +15,8 @@ async fn initialize_app(port: u16) -> tokio::task::JoinHandle<()> {
     dotenv::from_filename(".dev.env").ok();
 
     let auth = Auth::new(
-        dotenv::var("SIGNING_SECRET").unwrap(), 
-        dotenv::var("BOT_TOKEN").ok(), 
+        dotenv::var("SIGNING_SECRET").unwrap(),
+        dotenv::var("BOT_TOKEN").ok(),
         None,
     );
 
@@ -32,7 +27,10 @@ async fn initialize_app(port: u16) -> tokio::task::JoinHandle<()> {
     tokio::spawn(async move { app.start().await })
 }
 
-async fn send_fake_payload(payload: String, port: u16) -> Result<reqwest::Response, reqwest::Error> {
+async fn send_fake_payload(
+    payload: String,
+    port: u16,
+) -> Result<reqwest::Response, reqwest::Error> {
     // Create new timestamp
     let ts = chrono::Local::now().timestamp().to_string();
 
@@ -49,8 +47,10 @@ async fn send_fake_payload(payload: String, port: u16) -> Result<reqwest::Respon
             .header("X-Slack-Request-Timestamp", &ts)
             .header("X-Slack-Signature", format!("v0={}", hex::encode(hmac)))
             .body(payload)
-            .send()
-    ).await.unwrap()
+            .send(),
+    )
+    .await
+    .unwrap()
 }
 
 #[tokio::test]
@@ -59,23 +59,29 @@ async fn known_payload() {
 
     // Initialize app
     let app = initialize_app(port).await;
-    
+
     // Create payload
-    let shortcut = format!("payload={}",  urlencoding::encode(&json!({
-        "type":"shortcut",
-        "team": {
-            "id":     "some_id",
-            "domain": "some_domain"
-        },
-        "user": {
-            "id":       "some_id",
-            "username": "some_user",
-            "team_id":  "some_id"
-        },
-        "action_ts":   "some_action_ts",
-        "trigger_id":  "some_trigger_id",
-        "callback_id": "shortcut1",
-    }).to_string()));
+    let shortcut = format!(
+        "payload={}",
+        urlencoding::encode(
+            &json!({
+                "type":"shortcut",
+                "team": {
+                    "id":     "some_id",
+                    "domain": "some_domain"
+                },
+                "user": {
+                    "id":       "some_id",
+                    "username": "some_user",
+                    "team_id":  "some_id"
+                },
+                "action_ts":   "some_action_ts",
+                "trigger_id":  "some_trigger_id",
+                "callback_id": "shortcut1",
+            })
+            .to_string()
+        )
+    );
 
     // Send payload to app
     let response = send_fake_payload(shortcut, port).await.unwrap();
@@ -86,30 +92,35 @@ async fn known_payload() {
     assert!(response.status() == 200)
 }
 
-
 #[tokio::test]
 async fn unknown_payload() {
     let port = 3001;
 
     // Initialize app
     let app = initialize_app(port).await;
-    
+
     // Create payload
-    let shortcut = format!("payload={}",  urlencoding::encode(&json!({
-        "type":"shortcut",
-        "team": {
-            "id":     "some_id",
-            "domain": "some_domain"
-        },
-        "user": {
-            "id":       "some_id",
-            "username": "some_user",
-            "team_id":  "some_id"
-        },
-        "action_ts":   "some_action_ts",
-        "trigger_id":  "some_trigger_id",
-        "callback_id": "some_callback",
-    }).to_string()));
+    let shortcut = format!(
+        "payload={}",
+        urlencoding::encode(
+            &json!({
+                "type":"shortcut",
+                "team": {
+                    "id":     "some_id",
+                    "domain": "some_domain"
+                },
+                "user": {
+                    "id":       "some_id",
+                    "username": "some_user",
+                    "team_id":  "some_id"
+                },
+                "action_ts":   "some_action_ts",
+                "trigger_id":  "some_trigger_id",
+                "callback_id": "some_callback",
+            })
+            .to_string()
+        )
+    );
 
     // Send payload to app
     let response = send_fake_payload(shortcut, port).await.unwrap();
@@ -132,7 +143,7 @@ async fn no_signing_secret() {
 // This test ensures that UserList is iterable
 #[tokio::test]
 async fn get_and_iterate_userlist() {
-    let list = user::UserList::new(&dotenv::var("BOT_TOKEN").unwrap())
+    let list = user::List::new(&dotenv::var("BOT_TOKEN").unwrap())
         .await
         .unwrap();
 
@@ -140,6 +151,6 @@ async fn get_and_iterate_userlist() {
     let mut ids = Vec::new();
 
     for user in list {
-        ids.push(user.id)
+        ids.push(user.id);
     }
 }
