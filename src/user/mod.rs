@@ -85,6 +85,15 @@ impl UserList {
     }
 }
 
+impl std::iter::IntoIterator for UserList {
+    type Item = User;
+    type IntoIter = <Vec<User> as IntoIterator>::IntoIter;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.into_iter()
+    }
+}
+
 impl User {
     /// Gets a user from a slack-id
     pub async fn from_id(token: &str, id: &str) -> BoltResult<Self> {

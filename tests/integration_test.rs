@@ -7,6 +7,7 @@ use bolt_rs::{
         Shortcut,
         AppResult,
     },
+    user,
 };
 use serde_json::json;
 
@@ -114,6 +115,7 @@ async fn unknown_payload() {
     let response = send_fake_payload(shortcut, port).await.unwrap();
 }
 
+/// This test ensures a panic when initializing the app if no signing secret is given
 #[tokio::test]
 #[should_panic]
 async fn no_signing_secret() {
@@ -125,4 +127,19 @@ async fn no_signing_secret() {
         .address(SocketAddr::from(([127, 0, 0, 1], port)))
         .start()
         .await;
+}
+
+// This test ensures that UserList is iterable
+#[tokio::test]
+async fn get_and_iterate_userlist() {
+    let list = user::UserList::new(&dotenv::var("BOT_TOKEN").unwrap())
+        .await
+        .unwrap();
+
+    // Put ids in a vec, just for testing
+    let mut ids = Vec::new();
+
+    for user in list {
+        ids.push(user.id)
+    }
 }
