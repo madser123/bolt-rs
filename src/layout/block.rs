@@ -22,12 +22,13 @@ pub use video::Video;
 
 pub trait Block: Build {}
 
-/// Convert any type into blocks!
+/// Converts any type into blocks
 pub trait AsBlocks {
     /// Turns `self` into a list of `Blocks`
     fn as_blocks(&self) -> BoltResult<Blocks>;
 }
 
+/// Converts any type into a single block
 pub trait AsBlock<B: Block> {
     /// Turns `self` into a `Block` of type `B`
     fn as_block(&self) -> BoltResult<B>;
@@ -37,10 +38,13 @@ trait ModalBlock {}
 trait MessagesBlock {}
 trait HometabBlock {}
 
+
+/// A list of blocks as json-strings.
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
 pub struct Blocks(Vec<json::Value>);
 
 impl Blocks {
+    /// Creates a new empty list of blocks.
     pub fn new() -> Self {
         Self::default()
     }
@@ -60,19 +64,23 @@ impl Blocks {
         ids
     }
 
+    /// Returns the amount of blocks in this list.
     pub fn len(&self) -> usize {
         self.0.len()
     }
 
+    /// Returns true if no blocks is in the list.
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
 
+    /// Pushes a new block to the top of the list.
     pub fn push(&mut self, block: impl Block) -> BoltResult<()> {
         self.0.push(block.build()?);
         Ok(())
     }
 
+    /// Appends blocks to the end of the list.
     pub fn append(&mut self, blocks: Vec<impl Block>) -> BoltResult<()> {
         for b in blocks {
             self.push(b)?;
@@ -80,6 +88,7 @@ impl Blocks {
         Ok(())
     }
 
+    /// Splits the blocks into two elements at the chosen index.
     pub fn split_at(&self, mid: usize) -> (Blocks, Blocks) {
         let split = self.0.split_at(mid);
 
@@ -89,7 +98,8 @@ impl Blocks {
         (b1, b2)
     }
 
-    pub fn json(self) -> Vec<json::Value> {
+    /// Returns the blocklist as a vec of [`serde_json::Value`].
+    pub fn json_vec(self) -> Vec<json::Value> {
         self.0
     }
 
@@ -105,3 +115,4 @@ impl Blocks {
         }
     }
 }
+

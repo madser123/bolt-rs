@@ -1,6 +1,7 @@
 use super::*;
 use comp::{Text, Plain};
 
+/// A block of type `image`
 #[skip_serializing_none]
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Image {
@@ -23,6 +24,7 @@ impl Default for Image {
     }
 }
 impl Image {
+    /// Creates a new [Image] block
     pub fn new(url: &str, alt_text: &str) -> Self {
         Self {
             image_url: url.to_string(),

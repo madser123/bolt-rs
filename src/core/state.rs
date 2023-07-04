@@ -1,11 +1,13 @@
 use super::*;
 use std::collections::HashMap;
 
+/// A state-object from Slack.
 #[derive(Deserialize, Serialize, Debug, Clone, Default)]
 pub struct State {
     pub values: HashMap<String, HashMap<String, Value>>,
 }
 
+/// A value from a [State] object
 #[derive(Deserialize, Serialize, Debug, Clone, Default)]
 pub struct Value {
     pub r#type: String,
@@ -15,7 +17,9 @@ pub struct Value {
     pub value: Option<String>,
 }
 
+
 impl State {
+    /// Tries to extract the value from a specified state-object.
     pub fn get_value(&self, block_id: &str, action_id: &str) -> Result<&String, String> {
         let block = match self.values.get(block_id) {
             Some(b) => b,

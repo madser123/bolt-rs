@@ -3,6 +3,7 @@ use axum::http::HeaderMap;
 use futures::{future::BoxFuture, Future};
 use serde::de::DeserializeOwned;
 use serde_json as json;
+use colored::Colorize;
 
 mod auth;
 mod error;
@@ -18,21 +19,44 @@ pub use crate::payload::{
     ViewSubmission,
 };
 
+/// A result from a bolt-rs App.
 pub type AppResult<T> = Result<T, Error>;
 
+/// A collection of closures
 type Interactions<T> = HashMap<String, Box<dyn Fn(T) -> BoxFuture<'static, AppResult<()>> + Send + Sync>>;
 
-pub trait Interaction: DeserializeOwned {
+/// Defines behaviour for an interaction.
+/// 
+/// The identifier-functions help find the correct closure for the interaction.
+/// The error-function is used to define the error-type that the interaction should return.
+pub(crate) trait Interaction: DeserializeOwned {
     fn identifier(&self) -> String;
     fn identifier_name() -> String;
     fn error(message: String) -> crate::app::Error; 
 }
 
-pub trait Logger {
-    fn log(message: &str);
-    fn warn(message: &str);
+/// The logging "system" for slack-rs.
+/// 
+/// This trait is used internally to streamline the logging output.
+pub(crate) trait Logger {
+    /// Should the name of the object the logger trait is attached to
+    fn name() -> String;
+
+    /// A normal informational log:`[INFO][<name>] <message>`
+    fn log(message: &str) {
+        let banner = format!("[INFO][{}]", Self::name()).green();
+        println!("{banner} {message}");
+    }
+
+    /// A warning log:`[WARNING][<name>] <message>`
+    fn warn(message: &str) {
+        let banner = format!("[WARNING][{}]", Self::name()).yellow();
+        println!("{banner} {message}");
+    }
 }
 
+/// A representation of a bolt-rs app. This is the main "server"
+/// struct used for the app.
 pub struct App {
     address: SocketAddr,
     auth: Auth,
@@ -59,16 +83,13 @@ impl Default for App {
 }
 
 impl Logger for App {
-    fn log(message: &str) {
-        println!("[INFO][App] {message}");
-    }
-
-    fn warn(message: &str) {
-        println!("[WARNING][App] {message}");
+    fn name() -> String {
+        "App".to_string()
     }
 }
 
 impl App {
+    /// Creates a new app.
     pub fn new(auth: Auth) -> Self {
         Self {
             auth,
@@ -76,11 +97,14 @@ impl App {
         }
     }
 
+    /// Sets the desired socket-address for the App to serve/listen on.
+    /// Default is `0.0.0.0:8000`
     pub fn address(mut self, addr: SocketAddr) -> Self {
         self.address = addr;
         self
     }
 
+    /// Handles incoming interactions.
     async fn handle_interaction<T: Interaction>(closures: Arc<Interactions<T>>, interaction: String) -> AppResult<()> {
         // Parse interaction
         let interaction = match json::from_str::<T>(&interaction) {
@@ -98,6 +122,7 @@ impl App {
         }
     }
 
+    /// Creates the app and starts serving/listening on the configured address.
     pub async fn start(self) {
         // Check for warnings
         self.run_pre_startup_checks();
@@ -156,10 +181,12 @@ impl App {
             .unwrap();
     }
 
+    /// Checks basic requirements before serving/listening.
     fn run_pre_startup_checks(&self) {
         self.auth.run_pre_startup_checks();
     }
 
+    /// Adds a block-actions handler to the app.
     pub fn block_actions<F, Fut>(mut self, action_id: &str, cb: F) -> Self
     where
         Fut: Future<Output = AppResult<()>> + Send + 'static,
@@ -172,6 +199,7 @@ impl App {
         self
     }
 
+    /// Adds a message-actions handler to the app.
     pub fn message_actions<F, Fut>(mut self, callback_id: &str, cb: F) -> Self
     where
         Fut: Future<Output = AppResult<()>> + Send + 'static,
@@ -184,6 +212,7 @@ impl App {
         self
     }
 
+    /// Adds a shortcut handler to the app.
     pub fn shortcut<F, Fut>(mut self, callback_id: &str, cb: F) -> Self
     where
         Fut: Future<Output = AppResult<()>> + Send + 'static,
@@ -196,6 +225,7 @@ impl App {
         self
     }
 
+    /// Adds a view-closed handler to the app.
     pub fn view_close<F, Fut>(mut self, callback_id: &str, cb: F) -> Self
     where
         Fut: Future<Output = AppResult<()>> + Send + 'static,
@@ -208,6 +238,7 @@ impl App {
         self
     }
 
+    /// Adds a view-submission handler to the app.
     pub fn view_submission<F, Fut>(mut self, callback_id: &str, cb: F) -> Self
     where
         Fut: Future<Output = AppResult<()>> + Send + 'static,

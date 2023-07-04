@@ -24,7 +24,8 @@ impl Default for UrlInput {
         }
     }
 }
-impl UrlInput {
+impl UrlInput { 
+    /// Creates a new [UrlInput] element
     pub fn new(action_id: &str) -> Self {
         Self {
             action_id: action_id.to_string(),
@@ -32,21 +33,25 @@ impl UrlInput {
         }
     }
 
+    /// Sets the initial value of the element
     pub fn initial_value(mut self, value: &str) -> Self {
         self.inital_value = Some(value.to_string());
         self
     }
 
+    /// Applies a dispatch-action config to the element
     pub fn dispatch_action_config(mut self, config: DispatchActionConfig) -> Self {
         self.dispatch_action_config = Some(config);
         self
     }
 
+    /// Sets the element to be focused on load
     pub fn focus_on_load(mut self) -> Self {
         self.focus_on_load = Some(true);
         self
     }
 
+    /// Sets the placeholder text for the element.
     pub fn placeholder(mut self, text: Text<Plain>) -> Self {
         self.placeholder = Some(text);
         self

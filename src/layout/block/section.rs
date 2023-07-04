@@ -2,6 +2,7 @@ use super::*;
 use comp::{Text, Any};
 use element::SectionElement;
 
+/// A block of type `section`
 #[skip_serializing_none]
 #[derive(Serialize)]
 pub struct Section {
@@ -24,6 +25,7 @@ impl Default for Section {
     }
 }
 impl Section {
+    /// Creates a new [Section] block
     pub fn new() -> Self {
         Self::default()
     }
@@ -54,6 +56,7 @@ impl Section {
         self
     }
 
+    /// Adds an accessory to the section
     pub fn accessory(mut self, element: impl SectionElement) -> BoltResult<Self> {
         self.accessory = Some(element.build()?);
         Ok(self)

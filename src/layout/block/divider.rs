@@ -1,5 +1,6 @@
 use super::*;
 
+/// A block of type `divider`
 #[skip_serializing_none]
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Divider {
@@ -16,6 +17,7 @@ impl Default for Divider {
     }
 }
 impl Divider {
+    /// Creates a new [Divider] block
     pub fn new() -> Self {
         Self::default()
     }

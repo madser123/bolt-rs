@@ -6,27 +6,29 @@ use chrono::Local;
 
 const SLACK_ENCRYPTION_VERSION: &str = "v0";
 
+/// Authentication context for Bolt-rs powered apps.
 #[derive(Default, Clone)]
 pub struct Auth {
     // Tokens
+    /// A slack-app bot-token.
     bot_token: Option<String>,
+
+    /// A slack-app user-token.
     user_token: Option<String>,
 
     // Client info
+    /// A slack-app signing-secret.
     signing_secret: String,
 }
 
 impl Logger for Auth {
-    fn log(message: &str) {
-        println!("[INFO][Authentication] {message}");
-    }
-
-    fn warn(message: &str) {
-        println!("[WARNING][Authentication] {message}");
+    fn name() -> String {
+        "Authentication".to_string()
     }
 }
 
 impl Auth {
+    /// Create a new authentification context
     pub fn new(signing_secret: String, bot_token: Option<String>, user_token: Option<String>) -> Self {
         Self {
             signing_secret,
@@ -35,18 +37,27 @@ impl Auth {
         }
     }
 
+    /// Returns the bot-token, if any.
     pub fn bot_token(&self) -> Option<String> {
         self.bot_token.clone()
     }
 
+    /// Returns the user-token, if any.
     pub fn user_token(&self) -> Option<String> {
         self.user_token.clone()
     }
 
+    /// Returns the signing-secret.
     pub fn signing_secret(&self) -> String {
         self.signing_secret.clone()
     }
 
+    /// Alerts the user of non-registered tokens, which could lead to decreased functionality.
+    /// 
+    /// # Panics
+    /// 
+    /// Panics if the signing-secret supplied is empty, as the signing secret is necessary to authenticate requests.
+    /// 
     pub fn run_pre_startup_checks(&self) {
         if self.signing_secret.is_empty() {
             panic!("Signing secret is empty! If you instantiated your Auth using `Auth::default()` you need to use `Auth::new(signing_secret, Option<bot_token>, Option<user_token>)` instead.")
@@ -59,6 +70,7 @@ impl Auth {
         }
     }
 
+    /// Authenticates a slack-payload.
     pub fn sanitize_payload(&self, payload: &String, headers: HeaderMap) -> AppResult<String> {
         Self::log("Sanitizing new payload.");
 
@@ -100,7 +112,7 @@ impl Auth {
             Err(error) => return Err(Error::Authentication(format!("Couldn't parse signature-header to string: {error}")))
         };
 
-        // Ensure signature is matching
+        // Ensure signature is matching hmac
         if format!("{SLACK_ENCRYPTION_VERSION}={}", hex::encode(hmac)) != signature {
             return Err(Error::Authentication("Signatures didn't match".to_string()))
         };

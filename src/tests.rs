@@ -172,7 +172,7 @@ mod test {
             })
         )
     }
-
+    
     #[test]
     fn messageable_simple() {
         let t = serde_json::to_value(get_test_types().2.as_message().unwrap()).unwrap();

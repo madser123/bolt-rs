@@ -1,5 +1,6 @@
 use super::*;
 
+/// Represents an element of type `checkboxes`
 #[skip_serializing_none]
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct Checkboxes {
@@ -27,6 +28,7 @@ impl Default for Checkboxes {
     }
 }
 impl Checkboxes {
+    /// Creates a new [Checkboxes] element
     pub fn new(options: Vec<OptionObject<Any>>, action_id: &str) -> Self {
         Self {
             options,
@@ -35,16 +37,19 @@ impl Checkboxes {
         }
     }
 
+    /// Provides the inital options to be selected upon loading this element
     pub fn initial_options(mut self, options: Vec<OptionObject<Any>>) -> Self {
         self.initial_options = Some(options);
         self
     }
 
+    /// Adds a confirmation dialogue to the form
     pub fn comfirm(mut self, confirm: Confirmation) -> Self {
         self.confirm = Some(confirm);
         self
     }
 
+    /// Forces the element to be focused upon load
     pub fn focus_on_load(mut self, focus: bool) -> Self {
         self.focus_on_load = Some(focus);
         self

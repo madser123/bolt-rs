@@ -1,11 +1,12 @@
 use super::*;
 
+/// Creates a new [Number] element with static options.
 #[skip_serializing_none]
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct Number<T: std::cmp::PartialOrd + Serialize> {
     r#type: String,
     is_decimal_allowed: bool,
-    action_id: Option<String>,
+    action_id: String,
     initial_value: Option<T>,
     min_value: Option<T>,
     max_value: Option<T>,
@@ -20,7 +21,7 @@ impl<T: std::cmp::PartialOrd + Serialize> Default for Number<T> {
         Self {
             r#type: "number_input".to_string(),
             is_decimal_allowed: false,
-            action_id: None,
+            action_id: String::default(),
             initial_value: None,
             min_value: None,
             max_value: None,
@@ -31,43 +32,46 @@ impl<T: std::cmp::PartialOrd + Serialize> Default for Number<T> {
     }
 }
 impl<T: std::cmp::PartialOrd + Serialize> Number<T> {
-    pub fn new(is_decimal_allowed: bool) -> Self {
+    /// Creates a new [Number] element
+    pub fn new(action_id: &str, is_decimal_allowed: bool) -> Self {
         Self {
             is_decimal_allowed,
+            action_id: action_id.to_string(),
             ..Default::default()
         }
     }
 
-    pub fn action_id(mut self, id: &str) -> Self {
-        self.action_id = Some(id.to_string());
-        self
-    }
-
+    /// Sets the inital value to be selected upon load
     pub fn initial_value(mut self, value: T) -> Self {
         self.initial_value = Some(value);
         self
     }
 
+    /// Sets a minimum value to select
     pub fn min(mut self, value: T) -> Self {
         self.min_value = Some(value);
         self
     }
 
+    /// Sets a maximum value to select
     pub fn max(mut self, value: T) -> Self {
         self.max_value = Some(value);
         self
     }
 
+    /// Provides a dispatch-action configuration to the element
     pub fn dispatch_action_config(mut self, config: DispatchActionConfig) -> Self {
         self.dispatch_action_config = Some(config);
         self
     }
 
+    /// Forces the element to be focused on load
     pub fn focus_on_load(mut self, focus: bool) -> Self {
         self.focus_on_load = Some(focus);
         self
     }
 
+    /// Adds placeholder-text to the field
     pub fn placeholder(mut self, text: Text<Plain>) -> Self {
         self.placeholder = Some(text);
         self

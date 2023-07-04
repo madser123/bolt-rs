@@ -61,6 +61,7 @@ pub struct Team {
 }
 
 impl UserList {
+    /// Gets a complete list of users from slack
     pub async fn new(token: &str) -> BoltResult<Self> {
         Request::post("users.list", token)
             .send()
@@ -68,14 +69,17 @@ impl UserList {
             .unpack()
     }
 
+    /// Gets a specific user at an index
     pub fn get(&self, index: usize) -> Option<&User> {
         self.0.get(index)
     }
 
+    /// Returns the amount of users in the list
     pub fn len(&self) -> usize {
         self.0.len()
     }
 
+    /// Checks wether or not the list is empty
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
@@ -91,6 +95,7 @@ impl std::iter::IntoIterator for UserList {
 }
 
 impl User {
+    /// Gets a user from a slack-id
     pub async fn from_id(token: &str, id: &str) -> BoltResult<Self> {
         Request::get(&format!("users.info?user={id}"), token)
             .send()
@@ -98,6 +103,7 @@ impl User {
             .unpack()
     }
 
+    /// Gets a user from an email
     pub async fn from_email(token: &str, email: &str) -> BoltResult<Self> {
         Request::get(&format!("users.lookupByEmail?email={email}"), token)
             .send()

@@ -34,15 +34,19 @@ pub use self::url::UrlInput;
 
 pub trait Element: Build {}
 
+/// Converts any type into a list of elements
 pub trait AsElements {
     /// Turns `self` into a list of `Elements`
     fn as_elements(&self) -> BoltResult<Elements>;
 }
+
+/// Converts any type into a single element
 pub trait AsElement<E> {
     /// Turns `self` into an `Element` of type `T`
     fn as_element(&self) -> BoltResult<E>;
 }
 
+/// Convert elements into Section accessories
 pub trait SectionElement: Element
 where
     Self: Sized,
@@ -52,6 +56,7 @@ where
     }
 }
 
+/// Convert elements into action-elements
 pub trait ActionsElement: Element
 where
     Self: Sized,
@@ -60,6 +65,8 @@ where
         Actions::new().elements(vec![self])
     }
 }
+
+/// Convert elements into inputs
 pub trait InputElement: Element
 where
     Self: Sized,
@@ -68,21 +75,27 @@ where
         Input::new(self, label)
     }
 }
+
+/// Needed when using elements in contexts
 pub trait ContextElement: Element {}
 
+/// A collection of elements
 #[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct Elements(Vec<json::Value>);
 
 impl Elements {
+    /// Creates a new empty list of elements
     pub fn new() -> Self {
         Self::default()
     }
 
+    /// Pushes an element onto the list
     pub fn push(&mut self, element: &impl Element) -> BoltResult<()> {
         self.0.push(element.build()?);
         Ok(())
     }
 
+    /// Appends a list of elements to the list
     pub fn append(&mut self, elements: &mut Vec<impl Element>) -> BoltResult<()> {
         for e in elements {
             self.push(e)?;
@@ -90,6 +103,7 @@ impl Elements {
         Ok(())
     }
 
+    /// Output as a list of json values
     pub fn json(self) -> Vec<json::Value> {
         self.0
     }

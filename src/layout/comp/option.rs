@@ -1,5 +1,6 @@
 use super::*;
 
+/// A composition-object 
 #[skip_serializing_none]
 #[derive(Deserialize, Serialize, Debug, Default, Clone)]
 pub struct OptionObject<T: parsing::SerializeDefaultPhantomData = Any> {
@@ -10,6 +11,7 @@ pub struct OptionObject<T: parsing::SerializeDefaultPhantomData = Any> {
 }
 impl Composition for OptionObject {}
 impl<T: Default + parsing::SerializeDefaultPhantomData> OptionObject<T> {
+    /// Creates a new [OptionObject] composition-block
     pub fn new(text: Text<T>, value: &str) -> Self {
         Self {
             text,
@@ -18,19 +20,16 @@ impl<T: Default + parsing::SerializeDefaultPhantomData> OptionObject<T> {
         }
     }
 
+    /// Adds a description to the [OptionObject]
     pub fn description(mut self, text: Text<Plain>) -> Self {
         self.description = Some(text);
         self
     }
 
+    /// Adds a url 
     pub fn url(mut self, url: &str) -> Self {
         self.url = Some(url.to_string());
         self
-    }
-}
-impl Build for OptionObject {
-    fn get_type(&self) -> String {
-        "composition:optionobject".to_string()
     }
 }
 
@@ -44,10 +43,5 @@ impl Composition for OptionGroup {}
 impl OptionGroup {
     pub fn new(label: Text<Plain>, options: Vec<OptionObject>) -> Self {
         Self { label, options }
-    }
-}
-impl Build for OptionGroup {
-    fn get_type(&self) -> String {
-        "optiongroup".to_string()
     }
 }

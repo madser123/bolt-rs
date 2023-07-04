@@ -12,4 +12,4 @@ pub use filter::Filter;
 pub use option::{OptionGroup, OptionObject};
 pub use text::{Any, Markdown, Plain, Text};
 
-pub trait Composition: Build {}
+pub trait Composition {}

@@ -1,6 +1,7 @@
 use super::*;
 use element::ActionsElement;
 
+/// A block of type `actions`
 #[skip_serializing_none]
 #[derive(Deserialize, Serialize, Debug)]
 pub struct Actions {
@@ -19,6 +20,7 @@ impl Default for Actions {
     }
 }
 impl Actions {
+    /// Creates a new [Actions] block.
     pub fn new() -> Self {
         Self::default()
     }
