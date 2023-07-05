@@ -161,50 +161,9 @@ impl Upload {
             ..Default::default()
         }
     }
-
-    /// Uploads the content to slack, returning the file-object.
-    ///
-    /// # Errors
-    ///
-    /// An error will occur if the request can't be sent
-    ///
-    pub async fn upload(self, token: &str) -> BoltResult<File> {
-        let mut form = Form::new().text("token", token.to_owned());
-
-        if let Some(channels) = self.channels {
-            form = form.text("channels", channels);
-        }
-        if let Some(content) = self.content {
-            form = form.text("content", content);
-        }
-        if let Some(file) = self.file {
-            form = form.part("content", Part::bytes(file));
-        }
-        if let Some(filename) = self.filename {
-            form = form.text("filename", filename);
-        }
-        if let Some(filetype) = self.filetype {
-            form = form.text("filetype", filetype);
-        }
-        if let Some(comment) = self.initial_comment {
-            form = form.text("initial_comment", comment);
-        }
-        if let Some(thread_ts) = self.thread_ts {
-            form = form.text("thread_ts", thread_ts);
-        }
-        if let Some(title) = self.title {
-            form = form.text("title", title);
-        }
-
-        Request::post("files.upload", token)
-            .multipart(form)
-            .send::<File>()
-            .await?
-            .unpack()
-    }
 }
 
-impl<C> Upload<C> {
+impl<C: Send + Sync> Upload<C> {
     /// Sets the channels that the file should be sent to after uploading as a message.
     #[must_use]
     pub fn channels(mut self, channels: &[&str]) -> Self {
@@ -245,5 +204,46 @@ impl<C> Upload<C> {
     pub fn title(mut self, title: &str) -> Self {
         self.title = Some(title.to_string());
         self
+    }
+
+        /// Uploads the content to slack, returning the file-object.
+    ///
+    /// # Errors
+    ///
+    /// An error will occur if the request can't be sent
+    ///
+    pub async fn upload(self, token: &str) -> BoltResult<File> {
+        let mut form = Form::new().text("token", token.to_owned());
+
+        if let Some(channels) = self.channels {
+            form = form.text("channels", channels);
+        }
+        if let Some(content) = self.content {
+            form = form.text("content", content);
+        }
+        if let Some(file) = self.file {
+            form = form.part("content", Part::bytes(file));
+        }
+        if let Some(filename) = self.filename {
+            form = form.text("filename", filename);
+        }
+        if let Some(filetype) = self.filetype {
+            form = form.text("filetype", filetype);
+        }
+        if let Some(comment) = self.initial_comment {
+            form = form.text("initial_comment", comment);
+        }
+        if let Some(thread_ts) = self.thread_ts {
+            form = form.text("thread_ts", thread_ts);
+        }
+        if let Some(title) = self.title {
+            form = form.text("title", title);
+        }
+
+        Request::post("files.upload", token)
+            .multipart(form)
+            .send::<File>()
+            .await?
+            .unpack()
     }
 }
